@@ -44,7 +44,7 @@ export type StatKey = (typeof STAT_KEYS)[Role][number];
 // 사용자가 주요 스탯만 입력할 수도 있으므로 모든 키가 선택값이다.
 export type Stats = Partial<Record<StatKey, number>>;
 
-// 입력값: 강화·각성 전, 훈련·훈련 재분배·특훈은 반영된 능력치
+// 입력값: 훈련·강화·각성 전 능력치
 export interface CardInput {
   name: string;
   type: CardType;
@@ -59,4 +59,5 @@ export interface CommonCondition {
   setDeckScore: number;
   lockerLevel: number;
   positionLevel: number;
+  redistTargetPct: number; // 훈련 재분배 목표 확률(%)
 }

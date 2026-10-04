@@ -42,7 +42,8 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0 };
+const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, redistTargetPct: 10 };
+const noTraining = { core: 0, total: 0, estimated: false };
 
 describe("normalize", () => {
   it("보너스가 없으면 입력값 그대로", () => {
@@ -83,15 +84,20 @@ describe("normalize", () => {
 
 describe("score", () => {
   it("타자: 핵심 = 파워+정확+선구, 전체 = 6개 합", () => {
-    expect(score("batter", card().base)).toEqual({ core: 210, total: 330 });
+    expect(score("batter", card().base, noTraining)).toEqual({ core: 210, total: 330 });
   });
 
   it("투수: 핵심 = 변화+구위", () => {
     const s = { 구속: 70, 변화: 80, 구위: 75, 제구: 60, 지구력: 50, 수비: 40 };
-    expect(score("pitcher", s)).toEqual({ core: 155, total: 375 });
+    expect(score("pitcher", s, noTraining)).toEqual({ core: 155, total: 375 });
   });
 
   it("스탯이 비어 있으면 해당 합계는 null", () => {
-    expect(score("batter", { 파워: 80, 정확: 70, 선구: 60 })).toEqual({ core: 210, total: null });
+    expect(score("batter", { 파워: 80, 정확: 70, 선구: 60 }, noTraining)).toEqual({ core: 210, total: null });
+  });
+
+  it("훈련은 핵심·전체 합계에 각각 더한다", () => {
+    const t = { core: 33, total: 54, estimated: false };
+    expect(score("batter", card().base, t)).toEqual({ core: 243, total: 384 });
   });
 });
