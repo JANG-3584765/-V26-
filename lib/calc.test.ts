@@ -42,7 +42,7 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, redistTargetPct: 10 };
+const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, redistTargetPct: 10 };
 const noTraining = { core: 0, total: 0, estimated: false };
 
 describe("normalize", () => {

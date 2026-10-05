@@ -59,5 +59,6 @@ export interface CommonCondition {
   setDeckScore: number;
   lockerLevel: number;
   positionLevel: number;
+  applyTraining: boolean;
   redistTargetPct: number; // 훈련 재분배 목표 확률(%)
 }

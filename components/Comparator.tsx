@@ -1,0 +1,167 @@
+"use client";
+
+// 입력값(useState)이 바뀔 때마다 다시 그려야 하므로 클라이언트 컴포넌트로 만든다.
+// https://nextjs.org/docs/app/building-your-application/rendering/client-components
+import { useState } from "react";
+import CardForm, { ROW_HEIGHT } from "./CardForm";
+import { DEFAULT_CONDITION, maxEnhance } from "@/lib/bonusTable";
+import { compareCards } from "@/lib/compare";
+import { CORE_STAT_KEYS, STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
+
+const MIN_CARDS = 2;
+const MAX_CARDS = 3;
+const TARGET_OPTIONS = [50, 25, 10, 5, 1];
+
+const newCard = (role: Role, n: number): CardInput => ({
+  name: `카드 ${n}`,
+  type: "임팩트",
+  grade: 4,
+  base: {},
+  enhanceLevel: maxEnhance(role, "임팩트", 4),
+  awakened: true,
+});
+
+export default function Comparator() {
+  const [role, setRole] = useState<Role>("batter");
+  const [cards, setCards] = useState<CardInput[]>(() => [newCard("batter", 1), newCard("batter", 2)]);
+  const [cond, setCond] = useState<CommonCondition>(DEFAULT_CONDITION);
+  // 핵심만 입력: 숨긴 칸의 값은 지우지 않아서 전체로 되돌리면 다시 보인다
+  const [coreOnly, setCoreOnly] = useState(false);
+  const statKeys = coreOnly ? CORE_STAT_KEYS[role] : STAT_KEYS[role];
+
+  // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
+  const rows = compareCards(role, cards, cond);
+
+  // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 능력치만 비운다
+  const changeRole = (next: Role) => {
+    setRole(next);
+    setCards(cards.map((c) => ({ ...c, base: {} })));
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        {(["batter", "pitcher"] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => changeRole(r)}
+            className={`rounded-lg py-2 font-medium ${role === r ? "bg-foreground text-background" : "border border-zinc-300 dark:border-zinc-700"}`}
+          >
+            {r === "batter" ? "타자" : "투수"}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        {[false, true].map((v) => (
+          <button
+            key={String(v)}
+            type="button"
+            onClick={() => setCoreOnly(v)}
+            className={`rounded-lg py-1.5 ${coreOnly === v ? "bg-zinc-200 font-medium dark:bg-zinc-800" : "text-zinc-500"}`}
+          >
+            {v ? `핵심만 (${CORE_STAT_KEYS[role].join("·")})` : "전체 스탯"}
+          </button>
+        ))}
+      </div>
+
+      <section className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+        <p className="mb-3 text-xs text-zinc-500">훈련·강화·각성 전 능력치를 입력하세요</p>
+        <div className="flex gap-1.5">
+          {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
+          <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
+            {["이름", "종류", "등급", "훈련", ...statKeys].map((label) => (
+              <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
+                {label}
+              </span>
+            ))}
+          </div>
+          {cards.map((card, i) => (
+            <CardForm
+              key={i}
+              role={role}
+              statKeys={statKeys}
+              card={card}
+              onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
+              onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
+            />
+          ))}
+        </div>
+      </section>
+      {cards.length < MAX_CARDS && (
+        <button
+          type="button"
+          onClick={() => setCards([...cards, newCard(role, cards.length + 1)])}
+          className="w-full rounded-xl border border-dashed border-zinc-300 py-3 text-sm text-zinc-500 dark:border-zinc-700"
+        >
+          + 카드 추가
+        </button>
+      )}
+
+      <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+        <label className="flex items-center gap-2 font-medium">
+          <input
+            type="checkbox"
+            checked={cond.applyTraining}
+            onChange={(e) => setCond({ ...cond, applyTraining: e.target.checked })}
+          />
+          훈련 적용 (최대 레벨)
+        </label>
+        {cond.applyTraining && (
+          <>
+            <p className="mt-3 text-sm text-zinc-500">재분배 목표 확률 — 낮을수록 더 많이 돌린 결과</p>
+            <div className="mt-1 grid grid-cols-5 gap-1">
+              {TARGET_OPTIONS.map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => setCond({ ...cond, redistTargetPct: pct })}
+                  className={`rounded-lg py-2 text-sm ${cond.redistTargetPct === pct ? "bg-foreground text-background" : "border border-zinc-300 dark:border-zinc-700"}`}
+                >
+                  {pct}%
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      <section>
+        <h2 className="font-semibold">결과 (핵심 합계 순)</h2>
+        <ol className="mt-2 space-y-2">
+          {rows.map((r, rank) => (
+            <li key={r.index} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+              <div className="flex items-baseline justify-between">
+                <span className="font-medium">
+                  {rank + 1}. {r.card.name}
+                </span>
+                <span className="text-xs text-zinc-500">
+                  {r.card.type} {r.card.grade}성
+                </span>
+              </div>
+              <div className="mt-1 flex gap-4 text-sm">
+                <span>
+                  핵심 {r.core ?? "–"}
+                  {cond.applyTraining && <span className="text-zinc-500"> (훈련 +{r.training.core})</span>}
+                </span>
+                {!coreOnly && (
+                  <span>
+                    전체 {r.total ?? "–"}
+                    {cond.applyTraining && <span className="text-zinc-500"> (+{r.training.total})</span>}
+                  </span>
+                )}
+              </div>
+              {cond.applyTraining && r.training.estimated && (
+                <p className="mt-1 text-xs text-amber-600">훈련값은 확률표가 없어 추정치입니다</p>
+              )}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-2 text-xs text-zinc-500">
+          핵심: {role === "batter" ? "파워+정확+선구" : "변화+구위"} · 입력하지 않은 스탯이 있으면 합계는 –
+        </p>
+      </section>
+    </div>
+  );
+}

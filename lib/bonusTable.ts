@@ -46,6 +46,7 @@ export const DEFAULT_CONDITION: CommonCondition = {
   setDeckScore: 0,
   lockerLevel: BONUS_TABLE.locker.batter.length - 1,
   positionLevel: BONUS_TABLE.position.batter.length - 1,
+  applyTraining: true,
   redistTargetPct: 10,
 };
 
