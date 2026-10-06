@@ -1,4 +1,4 @@
-import { BONUS_TABLE, type BonusTable } from "./bonusTable";
+import { BONUS_TABLE } from "./bonusTable";
 import { normalize, score } from "./calc";
 import { trainingBonus, type Training } from "./training";
 import type { CardInput, CommonCondition, Role, Stats } from "./types";
@@ -18,15 +18,10 @@ const NO_TRAINING: Training = { core: 0, total: 0, estimated: false };
 const rank = (v: number | null) => v ?? -1;
 
 // 카드별 최종 합계를 계산해 핵심 합계 → 전체 합계 순으로 정렬한다.
-export function compareCards(
-  role: Role,
-  cards: CardInput[],
-  cond: CommonCondition,
-  table: BonusTable = BONUS_TABLE,
-): ResultRow[] {
+export function compareCards(role: Role, cards: CardInput[], cond: CommonCondition): ResultRow[] {
   return cards
     .map((card, index) => {
-      const stats = normalize(role, card, cond, table);
+      const stats = normalize(role, card, cond, BONUS_TABLE);
       const training = cond.applyTraining
         ? trainingBonus(role, card.type, card.grade, cond.redistTargetPct)
         : NO_TRAINING;

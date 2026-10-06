@@ -4,6 +4,7 @@
 // https://nextjs.org/docs/app/building-your-application/rendering/client-components
 import { useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
+import Segmented from "./Segmented";
 import { DEFAULT_CONDITION, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
 import { CORE_STAT_KEYS, STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
@@ -40,31 +41,22 @@ export default function Comparator() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2">
-        {(["batter", "pitcher"] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => changeRole(r)}
-            className={`rounded-lg py-2 font-medium ${role === r ? "bg-foreground text-background" : "border border-zinc-300 dark:border-zinc-700"}`}
-          >
-            {r === "batter" ? "타자" : "투수"}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        {[false, true].map((v) => (
-          <button
-            key={String(v)}
-            type="button"
-            onClick={() => setCoreOnly(v)}
-            className={`rounded-lg py-1.5 ${coreOnly === v ? "bg-zinc-200 font-medium dark:bg-zinc-800" : "text-zinc-500"}`}
-          >
-            {v ? `핵심만 (${CORE_STAT_KEYS[role].join("·")})` : "전체 스탯"}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        options={[
+          { value: "batter", label: "타자" },
+          { value: "pitcher", label: "투수" },
+        ]}
+        value={role}
+        onChange={changeRole}
+      />
+      <Segmented
+        options={[
+          { value: false, label: "전체 스탯" },
+          { value: true, label: `핵심만 (${CORE_STAT_KEYS[role].join("·")})` },
+        ]}
+        value={coreOnly}
+        onChange={setCoreOnly}
+      />
 
       <section className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
         <p className="mb-3 text-xs text-zinc-500">훈련·강화·각성 전 능력치를 입력하세요</p>
@@ -111,17 +103,12 @@ export default function Comparator() {
         {cond.applyTraining && (
           <>
             <p className="mt-3 text-sm text-zinc-500">재분배 목표 확률 — 낮을수록 더 많이 돌린 결과</p>
-            <div className="mt-1 grid grid-cols-5 gap-1">
-              {TARGET_OPTIONS.map((pct) => (
-                <button
-                  key={pct}
-                  type="button"
-                  onClick={() => setCond({ ...cond, redistTargetPct: pct })}
-                  className={`rounded-lg py-2 text-sm ${cond.redistTargetPct === pct ? "bg-foreground text-background" : "border border-zinc-300 dark:border-zinc-700"}`}
-                >
-                  {pct}%
-                </button>
-              ))}
+            <div className="mt-1">
+              <Segmented
+                options={TARGET_OPTIONS.map((pct) => ({ value: pct, label: `${pct}%` }))}
+                value={cond.redistTargetPct}
+                onChange={(pct) => setCond({ ...cond, redistTargetPct: pct })}
+              />
             </div>
           </>
         )}
