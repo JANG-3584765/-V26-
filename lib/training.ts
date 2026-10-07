@@ -1,4 +1,4 @@
-import type { CardType, Grade, Role } from "./types";
+import { CORE_STAT_KEYS, STAT_KEYS, type CardType, type Grade, type Role, type StatKey, type Stats } from "./types";
 
 // 최대 훈련 레벨 = 기본 훈련 + 훈련 돌파
 export const TRAINING_MAX_LEVEL: Record<CardType, Partial<Record<Grade, number>>> = {
@@ -71,13 +71,13 @@ export const REDIST_TABLE: Record<Role, RedistByCard> = {
   },
 };
 
-// 목표 확률 이상으로 나오는 값 중 가장 큰 값 (확률은 값이 커질수록 줄어든다)
+// 확률이 목표에 가장 가까운 값. 차이가 같으면 확률이 높은(값이 작은) 쪽을 고른다.
 export function valueAtProb(table: RedistTable, targetPct: number): number {
-  let value = table.from - 1;
+  let best = 0;
   table.probs.forEach((p, i) => {
-    if (p >= targetPct) value = table.from + i;
+    if (Math.abs(p - targetPct) < Math.abs(table.probs[best] - targetPct)) best = i;
   });
-  return value;
+  return table.from + best;
 }
 
 export interface Training {
@@ -87,21 +87,48 @@ export interface Training {
 }
 
 // 추정 기준 카드. 표가 있는 카드로 검증해 보면 같은 확률에서 "핵심 합 ÷ 훈련 총량"이
-// 카드 종류와 무관하게 거의 일정해서(10% 기준 타자 약 0.6, 투수 약 0.41), 기준 카드 값에 총량 비율을 곱한다.
+// 카드 종류와 무관하게 거의 일정해서(10% 기준 타자 약 0.6, 투수 약 0.43), 기준 카드 값에 총량 비율을 곱한다.
 // 시그니처는 재분배 방식이 달라 기준으로 쓰지 않는다.
-// 10% 기준 오차(실제 → 추정): 타자 임팩 33→32, 국대 36→40 / 투수 임팩 23→22, 국대 26→27, 올스타 37→37
-const ESTIMATE_BASE = { type: "골든글러브", grade: 5 } as const;
+// 10% 기준 오차(실제 → 추정): 타자 임팩 34→32, 국대 37→40 / 투수 임팩 24→23, 국대 26→28, 올스타 37→38
+export const ESTIMATE_BASE = { type: "골든글러브", grade: 5 } as const;
 
-// 최대 훈련 + 재분배를 목표 확률 수준까지 돌렸다고 가정했을 때 더해지는 양
+export function estimateCore(role: Role, level: number, targetPct: number): number {
+  const base = REDIST_TABLE[role][ESTIMATE_BASE.type]![ESTIMATE_BASE.grade]!;
+  const baseLevel = TRAINING_MAX_LEVEL[ESTIMATE_BASE.type][ESTIMATE_BASE.grade]!;
+  return Math.round((valueAtProb(base, targetPct) * level) / baseLevel);
+}
+
+// 최대 훈련 + 재분배 결과가 목표 확률 수준일 때의 핵심 합과 총량
 export function trainingBonus(role: Role, type: CardType, grade: Grade, targetPct: number): Training {
   const level = TRAINING_MAX_LEVEL[type][grade] ?? 0;
   const total = level * POINTS_PER_LEVEL;
 
   const own = REDIST_TABLE[role][type]?.[grade];
   if (own) return { core: valueAtProb(own, targetPct), total, estimated: false };
+  return { core: estimateCore(role, level, targetPct), total, estimated: true };
+}
 
-  const base = REDIST_TABLE[role][ESTIMATE_BASE.type]![ESTIMATE_BASE.grade]!;
-  const baseLevel = TRAINING_MAX_LEVEL[ESTIMATE_BASE.type][ESTIMATE_BASE.grade]!;
-  const core = Math.round((valueAtProb(base, targetPct) * level) / baseLevel);
-  return { core, total, estimated: true };
+// 균등하게 나누고 나누어떨어지지 않는 나머지는 한 스탯에 몰아준다
+function spread(keys: readonly StatKey[], amount: number, remainderTo: StatKey): Stats {
+  const each = Math.floor(amount / keys.length);
+  const result: Stats = Object.fromEntries(keys.map((k) => [k, each]));
+  result[remainderTo] = each + (amount % keys.length);
+  return result;
+}
+
+// 나머지를 받는 스탯: 각 묶음에서 가장 중요하게 보는 스탯
+const REMAINDER_TO = {
+  batter: { core: "파워", rest: "인내" },
+  pitcher: { core: "구위", rest: "지구력" },
+} as const;
+
+// 훈련값을 스탯별로 나눈다. 핵심 합은 핵심 스탯끼리, 남은 총량은 나머지 스탯끼리 균등 분배.
+// 예) 시그 타자 총량 75, 핵심 47 → 파워 17·정확 15·선구 15 / 인내 10·주루 9·수비 9
+export function distribute(role: Role, { core, total }: Pick<Training, "core" | "total">): Stats {
+  const coreKeys = CORE_STAT_KEYS[role];
+  const restKeys = STAT_KEYS[role].filter((k) => !(coreKeys as readonly StatKey[]).includes(k));
+  return {
+    ...spread(coreKeys, core, REMAINDER_TO[role].core),
+    ...spread(restKeys, total - core, REMAINDER_TO[role].rest),
+  };
 }

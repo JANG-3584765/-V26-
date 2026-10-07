@@ -1,5 +1,4 @@
 import { gradeBonus, type BonusTable } from "./bonusTable";
-import type { Training } from "./training";
 import {
   CORE_STAT_KEYS,
   STAT_KEYS,
@@ -55,12 +54,9 @@ function sum(stats: Stats, keys: readonly (keyof Stats)[]): number | null {
   return total;
 }
 
-// 훈련은 어느 스탯에 오를지 무작위라 스탯별로 더하지 않고 합계에만 더한다.
-export function score(role: Role, stats: Stats, training: Training) {
-  const core = sum(stats, CORE_STAT_KEYS[role]);
-  const total = sum(stats, STAT_KEYS[role]);
+export function score(role: Role, stats: Stats) {
   return {
-    core: core === null ? null : core + training.core,
-    total: total === null ? null : total + training.total,
+    core: sum(stats, CORE_STAT_KEYS[role]),
+    total: sum(stats, STAT_KEYS[role]),
   };
 }

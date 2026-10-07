@@ -52,6 +52,7 @@ export interface CardInput {
   base: Stats;
   enhanceLevel: number;
   awakened: boolean;
+  customTraining?: Stats; // 직접 입력한 스탯별 훈련값 (없으면 확률 기준 기본값)
 }
 
 // 비교하는 모든 카드에 똑같이 적용되는 조건

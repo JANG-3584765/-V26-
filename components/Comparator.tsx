@@ -5,13 +5,13 @@
 import { useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
+import TrainingPanel from "./TrainingPanel";
 import { DEFAULT_CONDITION, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
 import { CORE_STAT_KEYS, STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
 
 const MIN_CARDS = 2;
 const MAX_CARDS = 3;
-const TARGET_OPTIONS = [50, 25, 10, 5, 1];
 
 const newCard = (role: Role, n: number): CardInput => ({
   name: `카드 ${n}`,
@@ -36,7 +36,7 @@ export default function Comparator() {
   // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 능력치만 비운다
   const changeRole = (next: Role) => {
     setRole(next);
-    setCards(cards.map((c) => ({ ...c, base: {} })));
+    setCards(cards.map((c) => ({ ...c, base: {}, customTraining: undefined })));
   };
 
   return (
@@ -91,28 +91,14 @@ export default function Comparator() {
         </button>
       )}
 
-      <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-        <label className="flex items-center gap-2 font-medium">
-          <input
-            type="checkbox"
-            checked={cond.applyTraining}
-            onChange={(e) => setCond({ ...cond, applyTraining: e.target.checked })}
-          />
-          훈련 적용 (최대 레벨)
-        </label>
-        {cond.applyTraining && (
-          <>
-            <p className="mt-3 text-sm text-zinc-500">재분배 목표 확률 — 낮을수록 더 많이 돌린 결과</p>
-            <div className="mt-1">
-              <Segmented
-                options={TARGET_OPTIONS.map((pct) => ({ value: pct, label: `${pct}%` }))}
-                value={cond.redistTargetPct}
-                onChange={(pct) => setCond({ ...cond, redistTargetPct: pct })}
-              />
-            </div>
-          </>
-        )}
-      </section>
+      <TrainingPanel
+        role={role}
+        statKeys={statKeys}
+        cards={cards}
+        onCardsChange={setCards}
+        cond={cond}
+        onCondChange={setCond}
+      />
 
       <section>
         <h2 className="font-semibold">결과 (핵심 합계 순)</h2>
@@ -128,18 +114,10 @@ export default function Comparator() {
                 </span>
               </div>
               <div className="mt-1 flex gap-4 text-sm">
-                <span>
-                  핵심 {r.core ?? "–"}
-                  {cond.applyTraining && <span className="text-zinc-500"> (훈련 +{r.training.core})</span>}
-                </span>
-                {!coreOnly && (
-                  <span>
-                    전체 {r.total ?? "–"}
-                    {cond.applyTraining && <span className="text-zinc-500"> (+{r.training.total})</span>}
-                  </span>
-                )}
+                <span>핵심 {r.core ?? "–"}</span>
+                {!coreOnly && <span>전체 {r.total ?? "–"}</span>}
               </div>
-              {cond.applyTraining && r.training.estimated && (
+              {r.trainingEstimated && (
                 <p className="mt-1 text-xs text-amber-600">훈련값은 확률표가 없어 추정치입니다</p>
               )}
             </li>

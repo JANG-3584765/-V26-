@@ -11,7 +11,7 @@ interface Props {
 }
 
 // 좁은 열에 들어가도록 화면에서는 커뮤니티 약칭으로 보여준다
-const SHORT_NAME: Record<CardType, string> = {
+export const SHORT_NAME: Record<CardType, string> = {
   시즌: "시즌",
   라이브: "라이브",
   임팩트: "임팩",
@@ -30,7 +30,7 @@ export default function CardForm({ role, statKeys, card, onChange, onRemove }: P
   const changeType = (type: CardType) => {
     const grades = CARD_GRADES[type];
     const grade = grades[grades.length - 1];
-    onChange({ ...card, type, grade, enhanceLevel: maxEnhance(role, type, grade) });
+    onChange({ ...card, type, grade, enhanceLevel: maxEnhance(role, type, grade), customTraining: undefined });
   };
 
   // 빈칸은 "입력 안 함"(undefined)으로 둔다. 0으로 바꾸면 합계 계산에 섞여 들어간다.
@@ -72,7 +72,7 @@ export default function CardForm({ role, statKeys, card, onChange, onRemove }: P
         value={card.grade}
         onChange={(e) => {
           const grade = Number(e.target.value) as Grade;
-          onChange({ ...card, grade, enhanceLevel: maxEnhance(role, card.type, grade) });
+          onChange({ ...card, grade, enhanceLevel: maxEnhance(role, card.type, grade), customTraining: undefined });
         }}
         aria-label="등급"
       >
