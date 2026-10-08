@@ -2,8 +2,8 @@ import { useState } from "react";
 import { ROW_HEIGHT, SHORT_NAME } from "./CardForm";
 import Segmented from "./Segmented";
 import { cardTraining } from "@/lib/compare";
-import { ESTIMATE_BASE, REDIST_TABLE, valueAtProb } from "@/lib/training";
-import type { CardInput, CardType, CommonCondition, Role, StatKey, Stats } from "@/lib/types";
+import { ESTIMATE_BASE, probOfCore, REDIST_TABLE, valueAtProb } from "@/lib/training";
+import { CORE_STAT_KEYS, type CardInput, type CardType, type CommonCondition, type Role, type StatKey, type Stats } from "@/lib/types";
 
 interface Props {
   role: Role;
@@ -17,6 +17,7 @@ interface Props {
 const TARGET_OPTIONS = [50, 30, 20, 10, 1];
 const REMAINDER_NOTE = { batter: "파워·인내", pitcher: "구위·지구력" };
 const sumOf = (s: Stats) => Object.values(s).reduce((a, b) => a! + b!, 0)!;
+const pick = (s: Stats, keys: readonly StatKey[]): Stats => Object.fromEntries(keys.map((k) => [k, s[k] ?? 0]));
 
 export default function TrainingPanel({ role, statKeys, cards, onCardsChange, cond, onCondChange }: Props) {
   const [showTable, setShowTable] = useState(false);
@@ -70,7 +71,7 @@ export default function TrainingPanel({ role, statKeys, cards, onCardsChange, co
             <p className="mt-2 text-xs text-zinc-500">가지고 있는 카드라면 실제 훈련 수치로 바꿔 넣으세요.</p>
             <div className="mt-2 flex gap-1.5">
               <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-                {["", ...statKeys, "합계", ""].map((label, i) => (
+                {["", ...statKeys, "합계", "확률", ""].map((label, i) => (
                   <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
                     {label}
                   </span>
@@ -81,6 +82,8 @@ export default function TrainingPanel({ role, statKeys, cards, onCardsChange, co
                 const auto = cardTraining(role, { ...card, customTraining: undefined }, cond).training;
                 const used = sumOf(training);
                 const max = sumOf(auto);
+                // 지금 훈련값의 핵심 합이 재분배 1회에 나올 확률 (값을 고치면 바로 다시 계산된다)
+                const prob = probOfCore(role, card.type, card.grade, sumOf(pick(training, CORE_STAT_KEYS[role])));
                 return (
                   <div key={i} className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <span className={`${ROW_HEIGHT} truncate text-center text-sm leading-9`}>
@@ -100,6 +103,11 @@ export default function TrainingPanel({ role, statKeys, cards, onCardsChange, co
                     <span className={`${ROW_HEIGHT} text-center text-sm leading-9 ${used === max ? "text-zinc-500" : "text-amber-600"}`}>
                       {used}/{max}
                     </span>
+                    <span className={`${ROW_HEIGHT} text-center text-sm leading-9 font-medium tabular-nums`}>
+                      {prob.cmp === "=" ? "" : prob.cmp}
+                      {prob.pct}%
+                      {prob.estimated && <span className="text-amber-600">*</span>}
+                    </span>
                     <button
                       type="button"
                       disabled={!card.customTraining}
@@ -113,7 +121,8 @@ export default function TrainingPanel({ role, statKeys, cards, onCardsChange, co
               })}
             </div>
             <p className="mt-2 text-xs text-zinc-500">
-              회색은 기본값, 진한 테두리는 직접 입력한 값 · <span className="text-amber-600">*</span> 확률표가 없어 추정한 기본값
+              회색은 기본값, 진한 테두리는 직접 입력한 값 · 확률은 재분배 1회에 그 핵심 합 이상이 나올 확률 ·{" "}
+              <span className="text-amber-600">*</span> 확률표가 없어 추정한 값
             </p>
           </details>
         </>

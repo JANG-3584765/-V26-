@@ -98,6 +98,30 @@ export function estimateCore(role: Role, level: number, targetPct: number): numb
   return Math.round((valueAtProb(base, targetPct) * level) / baseLevel);
 }
 
+export interface CoreProb {
+  pct: number;
+  cmp: "=" | ">" | "<"; // 표 범위를 벗어나면 끝값보다 크다/작다로 표시
+  estimated: boolean;
+}
+
+// valueAtProb의 반대: 핵심 합이 주어졌을 때 재분배 1회에 그 값 이상이 나올 확률
+export function probOfCore(role: Role, type: CardType, grade: Grade, core: number): CoreProb {
+  const own = REDIST_TABLE[role][type]?.[grade];
+  let table = own;
+  let value = core;
+  if (!table) {
+    // 표가 없으면 추정과 같은 방식으로 기준 카드 값으로 환산해서 찾는다
+    table = REDIST_TABLE[role][ESTIMATE_BASE.type]![ESTIMATE_BASE.grade]!;
+    const level = TRAINING_MAX_LEVEL[type][grade] ?? 0;
+    value = Math.round((core * TRAINING_MAX_LEVEL[ESTIMATE_BASE.type][ESTIMATE_BASE.grade]!) / level);
+  }
+  const i = value - table.from;
+  const estimated = !own;
+  if (i < 0) return { pct: table.probs[0], cmp: ">", estimated };
+  if (i >= table.probs.length) return { pct: table.probs[table.probs.length - 1], cmp: "<", estimated };
+  return { pct: table.probs[i], cmp: "=", estimated };
+}
+
 // 최대 훈련 + 재분배 결과가 목표 확률 수준일 때의 핵심 합과 총량
 export function trainingBonus(role: Role, type: CardType, grade: Grade, targetPct: number): Training {
   const level = TRAINING_MAX_LEVEL[type][grade] ?? 0;

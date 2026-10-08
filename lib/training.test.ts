@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CARD_GRADES, CARD_TYPES } from "./types";
-import { distribute, estimateCore, REDIST_TABLE, TRAINING_MAX_LEVEL, trainingBonus, valueAtProb } from "./training";
+import { distribute, estimateCore, probOfCore, REDIST_TABLE, TRAINING_MAX_LEVEL, trainingBonus, valueAtProb } from "./training";
 
 describe("데이터 점검", () => {
   it("존재하는 모든 등급에 최대 훈련 레벨이 있다", () => {
@@ -62,6 +62,26 @@ describe("trainingBonus (기본 10%)", () => {
         }
       }
     }
+  });
+});
+
+describe("probOfCore", () => {
+  it("표에 있는 값이면 그 확률", () => {
+    expect(probOfCore("batter", "임팩트", 4, 34)).toEqual({ pct: 7.46, cmp: "=", estimated: false });
+  });
+
+  it("표 범위를 벗어나면 끝값과 비교 표시", () => {
+    expect(probOfCore("batter", "임팩트", 4, 20)).toEqual({ pct: 94.74, cmp: ">", estimated: false });
+    expect(probOfCore("batter", "임팩트", 4, 40)).toEqual({ pct: 1.97, cmp: "<", estimated: false });
+  });
+
+  it("표가 없는 카드는 골글 5성 값으로 환산: 골글 4성 41 × 25/23 = 44.6 → 45 → 10.32%", () => {
+    expect(probOfCore("batter", "골든글러브", 4, 41)).toEqual({ pct: 10.32, cmp: "=", estimated: true });
+  });
+
+  it("기본값의 확률은 고른 확률 근처로 돌아온다", () => {
+    const core = trainingBonus("pitcher", "시그니처", 5, 10).core;
+    expect(probOfCore("pitcher", "시그니처", 5, core).pct).toBe(8.65);
   });
 });
 
