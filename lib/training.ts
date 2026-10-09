@@ -1,4 +1,4 @@
-import { CORE_STAT_KEYS, STAT_KEYS, type CardType, type Grade, type Role, type StatKey, type Stats } from "./types";
+import { CORE_STAT_KEYS, type CardType, type Grade, type Role, type Stats } from "./types";
 
 // 최대 훈련 레벨 = 기본 훈련 + 훈련 돌파
 export const TRAINING_MAX_LEVEL: Record<CardType, Partial<Record<Grade, number>>> = {
@@ -102,6 +102,8 @@ export interface CoreProb {
   pct: number;
   cmp: "=" | ">" | "<"; // 표 범위를 벗어나면 끝값보다 크다/작다로 표시
   estimated: boolean;
+  table: RedistTable; // 찾을 때 쓴 표 (표가 없는 카드는 추정 기준 카드의 표)
+  value: number; // 그 표에서 찾은 값 (추정이면 환산한 값)
 }
 
 // valueAtProb의 반대: 핵심 합이 주어졌을 때 재분배 1회에 그 값 이상이 나올 확률
@@ -116,10 +118,10 @@ export function probOfCore(role: Role, type: CardType, grade: Grade, core: numbe
     value = Math.round((core * TRAINING_MAX_LEVEL[ESTIMATE_BASE.type][ESTIMATE_BASE.grade]!) / level);
   }
   const i = value - table.from;
-  const estimated = !own;
-  if (i < 0) return { pct: table.probs[0], cmp: ">", estimated };
-  if (i >= table.probs.length) return { pct: table.probs[table.probs.length - 1], cmp: "<", estimated };
-  return { pct: table.probs[i], cmp: "=", estimated };
+  const base = { estimated: !own, table, value };
+  if (i < 0) return { pct: table.probs[0], cmp: ">", ...base };
+  if (i >= table.probs.length) return { pct: table.probs[table.probs.length - 1], cmp: "<", ...base };
+  return { pct: table.probs[i], cmp: "=", ...base };
 }
 
 // 최대 훈련 + 재분배 결과가 목표 확률 수준일 때의 핵심 합과 총량
@@ -132,27 +134,14 @@ export function trainingBonus(role: Role, type: CardType, grade: Grade, targetPc
   return { core: estimateCore(role, level, targetPct), total, estimated: true };
 }
 
-// 균등하게 나누고 나누어떨어지지 않는 나머지는 한 스탯에 몰아준다
-function spread(keys: readonly StatKey[], amount: number, remainderTo: StatKey): Stats {
-  const each = Math.floor(amount / keys.length);
+// 핵심 합을 핵심 스탯에 균등하게 나누고, 나누어떨어지지 않는 나머지는 가장 중요하게 보는 스탯에 더한다.
+// 예) 타자 핵심 47 → 파워 17·정확 15·선구 15
+const REMAINDER_TO = { batter: "파워", pitcher: "구위" } as const;
+
+export function distribute(role: Role, core: number): Stats {
+  const keys = CORE_STAT_KEYS[role];
+  const each = Math.floor(core / keys.length);
   const result: Stats = Object.fromEntries(keys.map((k) => [k, each]));
-  result[remainderTo] = each + (amount % keys.length);
+  result[REMAINDER_TO[role]] = each + (core % keys.length);
   return result;
-}
-
-// 나머지를 받는 스탯: 각 묶음에서 가장 중요하게 보는 스탯
-const REMAINDER_TO = {
-  batter: { core: "파워", rest: "인내" },
-  pitcher: { core: "구위", rest: "지구력" },
-} as const;
-
-// 훈련값을 스탯별로 나눈다. 핵심 합은 핵심 스탯끼리, 남은 총량은 나머지 스탯끼리 균등 분배.
-// 예) 시그 타자 총량 75, 핵심 47 → 파워 17·정확 15·선구 15 / 인내 10·주루 9·수비 9
-export function distribute(role: Role, { core, total }: Pick<Training, "core" | "total">): Stats {
-  const coreKeys = CORE_STAT_KEYS[role];
-  const restKeys = STAT_KEYS[role].filter((k) => !(coreKeys as readonly StatKey[]).includes(k));
-  return {
-    ...spread(coreKeys, core, REMAINDER_TO[role].core),
-    ...spread(restKeys, total - core, REMAINDER_TO[role].rest),
-  };
 }

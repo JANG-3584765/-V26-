@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BonusTable, CardTypeBonus, GradeBonus } from "./bonusTable";
-import { normalize, score } from "./calc";
+import { coreScore, normalize } from "./calc";
 import type { CardInput, CardType } from "./types";
 
 // 실제 수치가 채워지기 전이라 계산 규칙만 검증하는 가짜 표를 쓴다.
@@ -81,17 +81,16 @@ describe("normalize", () => {
   });
 });
 
-describe("score", () => {
-  it("타자: 핵심 = 파워+정확+선구, 전체 = 6개 합", () => {
-    expect(score("batter", card().base)).toEqual({ core: 210, total: 330 });
+describe("coreScore", () => {
+  it("타자: 파워+정확+선구", () => {
+    expect(coreScore("batter", card().base)).toBe(210);
   });
 
-  it("투수: 핵심 = 변화+구위", () => {
-    const s = { 구속: 70, 변화: 80, 구위: 75, 제구: 60, 지구력: 50, 수비: 40 };
-    expect(score("pitcher", s)).toEqual({ core: 155, total: 375 });
+  it("투수: 변화+구위", () => {
+    expect(coreScore("pitcher", { 구속: 70, 변화: 80, 구위: 75 })).toBe(155);
   });
 
-  it("스탯이 비어 있으면 해당 합계는 null", () => {
-    expect(score("batter", { 파워: 80, 정확: 70, 선구: 60 })).toEqual({ core: 210, total: null });
+  it("핵심 스탯이 하나라도 비어 있으면 null", () => {
+    expect(coreScore("batter", { 파워: 80, 정확: 70 })).toBeNull();
   });
 });

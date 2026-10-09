@@ -67,16 +67,16 @@ describe("trainingBonus (기본 10%)", () => {
 
 describe("probOfCore", () => {
   it("표에 있는 값이면 그 확률", () => {
-    expect(probOfCore("batter", "임팩트", 4, 34)).toEqual({ pct: 7.46, cmp: "=", estimated: false });
+    expect(probOfCore("batter", "임팩트", 4, 34)).toMatchObject({ pct: 7.46, cmp: "=", estimated: false });
   });
 
   it("표 범위를 벗어나면 끝값과 비교 표시", () => {
-    expect(probOfCore("batter", "임팩트", 4, 20)).toEqual({ pct: 94.74, cmp: ">", estimated: false });
-    expect(probOfCore("batter", "임팩트", 4, 40)).toEqual({ pct: 1.97, cmp: "<", estimated: false });
+    expect(probOfCore("batter", "임팩트", 4, 20)).toMatchObject({ pct: 94.74, cmp: ">", estimated: false });
+    expect(probOfCore("batter", "임팩트", 4, 40)).toMatchObject({ pct: 1.97, cmp: "<", estimated: false });
   });
 
   it("표가 없는 카드는 골글 5성 값으로 환산: 골글 4성 41 × 25/23 = 44.6 → 45 → 10.32%", () => {
-    expect(probOfCore("batter", "골든글러브", 4, 41)).toEqual({ pct: 10.32, cmp: "=", estimated: true });
+    expect(probOfCore("batter", "골든글러브", 4, 41)).toMatchObject({ pct: 10.32, cmp: "=", estimated: true, value: 45 });
   });
 
   it("기본값의 확률은 고른 확률 근처로 돌아온다", () => {
@@ -86,21 +86,11 @@ describe("probOfCore", () => {
 });
 
 describe("distribute", () => {
-  it("타자: 핵심은 파정선에, 남는 값은 파워 / 나머지는 인주수에, 남는 값은 인내", () => {
-    expect(distribute("batter", { core: 47, total: 75 })).toEqual({
-      파워: 17, 정확: 15, 선구: 15, 인내: 10, 주루: 9, 수비: 9,
-    });
+  it("타자: 핵심 합을 파정선에 나누고 남는 값은 파워", () => {
+    expect(distribute("batter", 47)).toEqual({ 파워: 17, 정확: 15, 선구: 15 });
   });
 
-  it("투수: 핵심은 변화·구위에, 남는 값은 구위 / 나머지는 4개에, 남는 값은 지구력", () => {
-    // 시그 투수 총량 75, 핵심 33 → 16·17 / 42 ÷ 4 = 10 나머지 2
-    expect(distribute("pitcher", { core: 33, total: 75 })).toEqual({
-      변화: 16, 구위: 17, 구속: 10, 제구: 10, 지구력: 12, 수비: 10,
-    });
-  });
-
-  it("나눈 값의 합은 총량과 같다", () => {
-    const d = distribute("batter", { core: 34, total: 54 });
-    expect(Object.values(d).reduce((a, b) => a! + b!, 0)).toBe(54);
+  it("투수: 변화·구위에 나누고 남는 값은 구위", () => {
+    expect(distribute("pitcher", 33)).toEqual({ 변화: 16, 구위: 17 });
   });
 });

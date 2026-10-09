@@ -54,9 +54,5 @@ function sum(stats: Stats, keys: readonly (keyof Stats)[]): number | null {
   return total;
 }
 
-export function score(role: Role, stats: Stats) {
-  return {
-    core: sum(stats, CORE_STAT_KEYS[role]),
-    total: sum(stats, STAT_KEYS[role]),
-  };
-}
+// 핵심 합계: 타자 파워+정확+선구, 투수 변화+구위
+export const coreScore = (role: Role, stats: Stats) => sum(stats, CORE_STAT_KEYS[role]);

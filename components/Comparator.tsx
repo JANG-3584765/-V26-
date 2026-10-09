@@ -8,7 +8,7 @@ import Segmented from "./Segmented";
 import TrainingPanel from "./TrainingPanel";
 import { DEFAULT_CONDITION, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
-import { CORE_STAT_KEYS, STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
+import { CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
 
 const MIN_CARDS = 2;
 const MAX_CARDS = 3;
@@ -26,9 +26,6 @@ export default function Comparator() {
   const [role, setRole] = useState<Role>("batter");
   const [cards, setCards] = useState<CardInput[]>(() => [newCard("batter", 1), newCard("batter", 2)]);
   const [cond, setCond] = useState<CommonCondition>(DEFAULT_CONDITION);
-  // 핵심만 입력: 숨긴 칸의 값은 지우지 않아서 전체로 되돌리면 다시 보인다
-  const [coreOnly, setCoreOnly] = useState(false);
-  const statKeys = coreOnly ? CORE_STAT_KEYS[role] : STAT_KEYS[role];
 
   // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
   const rows = compareCards(role, cards, cond);
@@ -49,21 +46,13 @@ export default function Comparator() {
         value={role}
         onChange={changeRole}
       />
-      <Segmented
-        options={[
-          { value: false, label: "전체 스탯" },
-          { value: true, label: `핵심만 (${CORE_STAT_KEYS[role].join("·")})` },
-        ]}
-        value={coreOnly}
-        onChange={setCoreOnly}
-      />
 
       <section className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
         <p className="mb-3 text-xs text-zinc-500">훈련·강화·각성 전 능력치를 입력하세요</p>
         <div className="flex gap-1.5">
           {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
           <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-            {["이름", "종류", "등급", "훈련", ...statKeys].map((label) => (
+            {["이름", "종류", "등급", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
               <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
                 {label}
               </span>
@@ -73,7 +62,6 @@ export default function Comparator() {
             <CardForm
               key={i}
               role={role}
-              statKeys={statKeys}
               card={card}
               onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
               onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
@@ -93,7 +81,6 @@ export default function Comparator() {
 
       <TrainingPanel
         role={role}
-        statKeys={statKeys}
         cards={cards}
         onCardsChange={setCards}
         cond={cond}
@@ -115,7 +102,6 @@ export default function Comparator() {
               </div>
               <div className="mt-1 flex gap-4 text-sm">
                 <span>핵심 {r.core ?? "–"}</span>
-                {!coreOnly && <span>전체 {r.total ?? "–"}</span>}
               </div>
               {r.trainingEstimated && (
                 <p className="mt-1 text-xs text-amber-600">훈련값은 확률표가 없어 추정치입니다</p>

@@ -1,10 +1,9 @@
 import { maxEnhance } from "@/lib/bonusTable";
 import { TRAINING_MAX_LEVEL } from "@/lib/training";
-import { CARD_GRADES, CARD_TYPES, type CardInput, type CardType, type Grade, type Role, type StatKey } from "@/lib/types";
+import { CARD_GRADES, CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Grade, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
   role: Role;
-  statKeys: readonly StatKey[]; // 입력칸을 보여줄 스탯 (전체 또는 핵심만)
   card: CardInput;
   onChange: (card: CardInput) => void;
   onRemove?: () => void; // 없으면 삭제 버튼을 숨긴다 (최소 2장 유지)
@@ -25,7 +24,7 @@ export const SHORT_NAME: Record<CardType, string> = {
 export const ROW_HEIGHT = "h-9";
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm dark:border-zinc-700`;
 
-export default function CardForm({ role, statKeys, card, onChange, onRemove }: Props) {
+export default function CardForm({ role, card, onChange, onRemove }: Props) {
   // 종류를 바꾸면 그 종류에 없는 등급이 남을 수 있으므로 가장 높은 등급으로 맞춘다
   const changeType = (type: CardType) => {
     const grades = CARD_GRADES[type];
@@ -86,7 +85,7 @@ export default function CardForm({ role, statKeys, card, onChange, onRemove }: P
         {TRAINING_MAX_LEVEL[card.type][card.grade]}Lv
       </p>
 
-      {statKeys.map((key) => (
+      {CORE_STAT_KEYS[role].map((key) => (
         // type="number" 대신 inputMode="numeric": 모바일에서 숫자 키패드를 띄우면서
         // 스크롤 시 값이 바뀌거나 e가 입력되는 number 입력칸의 문제를 피한다.
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inputmode
