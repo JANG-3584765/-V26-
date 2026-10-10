@@ -38,8 +38,8 @@ export default function TrainingPanel({ role, cards, onCardsChange, cond, onCond
       core,
       coreSum,
       estimated,
-      max: trainingBonus(role, card.type, card.grade, cond.redistTargetPct).total,
-      prob: probOfCore(role, card.type, card.grade, coreSum),
+      max: trainingBonus(role, card.type, cond.redistTargetPct).total,
+      prob: probOfCore(role, card.type, coreSum),
     };
   });
 
@@ -143,10 +143,10 @@ function RedistTables({ role, items }: { role: Role; items: { card: CardInput; p
         {items.map(({ card, prob }, i) => (
           <table key={i} className="w-full tabular-nums">
             <caption className="pb-1 text-left">
-              <span className="font-medium">{card.name}</span> {SHORT_NAME[card.type]} {card.grade}성
+              <span className="font-medium">{card.name}</span> {SHORT_NAME[card.type]}
               {prob.estimated && (
                 <span className="block text-amber-600">
-                  {SHORT_NAME[ESTIMATE_BASE.type]} {ESTIMATE_BASE.grade}성 표로 환산 ({prob.value})
+                  {SHORT_NAME[ESTIMATE_BASE]} 표로 환산 ({prob.value})
                 </span>
               )}
             </caption>

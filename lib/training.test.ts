@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { CARD_GRADES, CARD_TYPES } from "./types";
+import { CARD_TYPES, type CardType } from "./types";
 import { distribute, estimateCore, probOfCore, REDIST_TABLE, TRAINING_MAX_LEVEL, trainingBonus, valueAtProb } from "./training";
 
 describe("데이터 점검", () => {
-  it("존재하는 모든 등급에 최대 훈련 레벨이 있다", () => {
-    for (const type of CARD_TYPES) {
-      for (const g of CARD_GRADES[type]) expect(TRAINING_MAX_LEVEL[type][g], `${type} ${g}성`).toBeGreaterThan(0);
-    }
+  it("모든 카드 종류에 최대 훈련 레벨이 있다", () => {
+    for (const type of CARD_TYPES) expect(TRAINING_MAX_LEVEL[type], type).toBeGreaterThan(0);
   });
 
   // 옮겨 적다 생긴 오타는 대개 확률이 줄지 않는 지점으로 드러난다
   it("확률표는 값이 커질수록 확률이 줄어든다", () => {
     for (const byCard of Object.values(REDIST_TABLE)) {
-      for (const byGrade of Object.values(byCard)) {
-        for (const table of Object.values(byGrade ?? {})) {
-          table!.probs.forEach((p, i) => i > 0 && expect(p).toBeLessThan(table!.probs[i - 1]));
-        }
+      for (const table of Object.values(byCard)) {
+        table.probs.forEach((p, i) => i > 0 && expect(p).toBeLessThan(table.probs[i - 1]));
       }
     }
   });
@@ -31,35 +27,31 @@ describe("valueAtProb", () => {
   });
 
   it("10% 기준 투수 값이 커뮤니티 기준과 같다 (임팩 24 / 시그 33 / 골글 32 / 국대 26)", () => {
-    const at = (type: "임팩트" | "시그니처" | "골든글러브" | "국가대표", grade: 4 | 5) =>
-      trainingBonus("pitcher", type, grade, 10).core;
-    expect([at("임팩트", 4), at("시그니처", 5), at("골든글러브", 5), at("국가대표", 5)]).toEqual([24, 33, 32, 26]);
+    const at = (type: CardType) => trainingBonus("pitcher", type, 10).core;
+    expect([at("임팩트"), at("시그니처"), at("골든글러브"), at("국가대표")]).toEqual([24, 33, 32, 26]);
   });
 });
 
 describe("trainingBonus (기본 10%)", () => {
   it("임팩트 타자: 파정선 +34, 전체 +18레벨×3", () => {
-    expect(trainingBonus("batter", "임팩트", 4, 10)).toEqual({ core: 34, total: 54, estimated: false });
+    expect(trainingBonus("batter", "임팩트", 10)).toEqual({ core: 34, total: 54, estimated: false });
   });
 
-  // 표가 없는 카드: 골글 5성 값(타자 10% → 45) × 훈련 레벨 비율
-  it("골글 4성 추정: 45 × 23/25 = 41.4 → 41", () => {
-    expect(trainingBonus("batter", "골든글러브", 4, 10)).toEqual({ core: 41, total: 69, estimated: true });
+  // 표가 없는 카드: 골글 값(타자 10% → 45) × 훈련 레벨 비율
+  it("시즌 추정: 45 × 20/25 = 36", () => {
+    expect(trainingBonus("batter", "시즌", 10)).toEqual({ core: 36, total: 60, estimated: true });
   });
 
   it("타자 라이브 올스타 추정: 45 × 30/25 = 54", () => {
-    expect(trainingBonus("batter", "라이브 올스타", 5, 10)).toEqual({ core: 54, total: 90, estimated: true });
+    expect(trainingBonus("batter", "라이브 올스타", 10)).toEqual({ core: 54, total: 90, estimated: true });
   });
 
   it("추정 오차: 표가 있는 카드(시그 제외)를 추정해도 실제와 3 이내", () => {
     for (const role of ["batter", "pitcher"] as const) {
-      for (const [type, byGrade] of Object.entries(REDIST_TABLE[role])) {
+      for (const [type, table] of Object.entries(REDIST_TABLE[role]) as [CardType, NonNullable<(typeof REDIST_TABLE)["batter"][CardType]>][]) {
         if (type === "시그니처") continue;
-        for (const [g, table] of Object.entries(byGrade!)) {
-          const level = TRAINING_MAX_LEVEL[type as keyof typeof TRAINING_MAX_LEVEL][Number(g) as 4 | 5]!;
-          const diff = estimateCore(role, level, 10) - valueAtProb(table!, 10);
-          expect(Math.abs(diff), `${role} ${type} ${g}성`).toBeLessThanOrEqual(3);
-        }
+        const diff = estimateCore(role, TRAINING_MAX_LEVEL[type], 10) - valueAtProb(table, 10);
+        expect(Math.abs(diff), `${role} ${type}`).toBeLessThanOrEqual(3);
       }
     }
   });
@@ -67,21 +59,21 @@ describe("trainingBonus (기본 10%)", () => {
 
 describe("probOfCore", () => {
   it("표에 있는 값이면 그 확률", () => {
-    expect(probOfCore("batter", "임팩트", 4, 34)).toMatchObject({ pct: 7.46, cmp: "=", estimated: false });
+    expect(probOfCore("batter", "임팩트", 34)).toMatchObject({ pct: 7.46, cmp: "=", estimated: false });
   });
 
   it("표 범위를 벗어나면 끝값과 비교 표시", () => {
-    expect(probOfCore("batter", "임팩트", 4, 20)).toMatchObject({ pct: 94.74, cmp: ">", estimated: false });
-    expect(probOfCore("batter", "임팩트", 4, 40)).toMatchObject({ pct: 1.97, cmp: "<", estimated: false });
+    expect(probOfCore("batter", "임팩트", 20)).toMatchObject({ pct: 94.74, cmp: ">", estimated: false });
+    expect(probOfCore("batter", "임팩트", 40)).toMatchObject({ pct: 1.97, cmp: "<", estimated: false });
   });
 
-  it("표가 없는 카드는 골글 5성 값으로 환산: 골글 4성 41 × 25/23 = 44.6 → 45 → 10.32%", () => {
-    expect(probOfCore("batter", "골든글러브", 4, 41)).toMatchObject({ pct: 10.32, cmp: "=", estimated: true, value: 45 });
+  it("표가 없는 카드는 골글 값으로 환산: 시즌 36 × 25/20 = 45 → 10.32%", () => {
+    expect(probOfCore("batter", "시즌", 36)).toMatchObject({ pct: 10.32, cmp: "=", estimated: true, value: 45 });
   });
 
   it("기본값의 확률은 고른 확률 근처로 돌아온다", () => {
-    const core = trainingBonus("pitcher", "시그니처", 5, 10).core;
-    expect(probOfCore("pitcher", "시그니처", 5, core).pct).toBe(8.65);
+    const core = trainingBonus("pitcher", "시그니처", 10).core;
+    expect(probOfCore("pitcher", "시그니처", core).pct).toBe(8.65);
   });
 });
 

@@ -1,4 +1,4 @@
-import { gradeBonus, type BonusTable } from "./bonusTable";
+import type { BonusTable } from "./bonusTable";
 import {
   CORE_STAT_KEYS,
   STAT_KEYS,
@@ -25,7 +25,7 @@ export function normalize(
   cond: CommonCondition,
   table: BonusTable,
 ): Stats {
-  const typeBonus = gradeBonus(table, role, card.type, card.grade);
+  const typeBonus = table.cardType[role][card.type];
   const bonuses: (Stats | null | undefined)[] = [
     typeBonus.enhance[card.enhanceLevel],
     card.awakened ? typeBonus.awaken : null,

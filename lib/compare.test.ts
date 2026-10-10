@@ -6,7 +6,6 @@ import type { CardInput } from "./types";
 const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
   name,
   type: "임팩트",
-  grade: 4,
   base: { 파워: 80, 정확: 70, 선구: 60 },
   enhanceLevel: 0,
   awakened: false,
@@ -31,7 +30,7 @@ describe("compareCards", () => {
   });
 
   it("훈련을 켜면 카드별 기본 훈련값을 스탯마다 더한다", () => {
-    const cards = [card("임팩"), card("시그", { type: "시그니처", grade: 5 })];
+    const cards = [card("임팩"), card("시그", { type: "시그니처" })];
     expect(compareCards("batter", cards, noTraining).map((r) => r.core)).toEqual([210, 210]);
 
     // 10% 기준 시그 타자 핵심 +47 / 임팩 타자 +34

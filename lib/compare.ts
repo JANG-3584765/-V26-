@@ -16,7 +16,7 @@ export interface ResultRow {
 export function cardTraining(role: Role, card: CardInput, cond: CommonCondition) {
   if (!cond.applyTraining) return { training: {}, estimated: false };
   if (card.customTraining) return { training: card.customTraining, estimated: false };
-  const t = trainingBonus(role, card.type, card.grade, cond.redistTargetPct);
+  const t = trainingBonus(role, card.type, cond.redistTargetPct);
   return { training: distribute(role, t.core), estimated: t.estimated };
 }
 

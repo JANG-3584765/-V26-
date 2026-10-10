@@ -16,9 +16,8 @@ const MAX_CARDS = 3;
 const newCard = (role: Role, n: number): CardInput => ({
   name: `카드 ${n}`,
   type: "임팩트",
-  grade: 4,
   base: {},
-  enhanceLevel: maxEnhance(role, "임팩트", 4),
+  enhanceLevel: maxEnhance(role, "임팩트"),
   awakened: true,
 });
 
@@ -52,7 +51,7 @@ export default function Comparator() {
         <div className="flex gap-1.5">
           {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
           <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-            {["이름", "종류", "등급", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
+            {["이름", "종류", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
               <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
                 {label}
               </span>
@@ -97,7 +96,7 @@ export default function Comparator() {
                   {rank + 1}. {r.card.name}
                 </span>
                 <span className="text-xs text-zinc-500">
-                  {r.card.type} {r.card.grade}성
+                  {r.card.type}
                 </span>
               </div>
               <div className="mt-1 flex gap-4 text-sm">

@@ -1,6 +1,6 @@
 import { maxEnhance } from "@/lib/bonusTable";
 import { TRAINING_MAX_LEVEL } from "@/lib/training";
-import { CARD_GRADES, CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Grade, type Role, type StatKey } from "@/lib/types";
+import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
   role: Role;
@@ -25,12 +25,9 @@ export const ROW_HEIGHT = "h-9";
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm dark:border-zinc-700`;
 
 export default function CardForm({ role, card, onChange, onRemove }: Props) {
-  // 종류를 바꾸면 그 종류에 없는 등급이 남을 수 있으므로 가장 높은 등급으로 맞춘다
-  const changeType = (type: CardType) => {
-    const grades = CARD_GRADES[type];
-    const grade = grades[grades.length - 1];
-    onChange({ ...card, type, grade, enhanceLevel: maxEnhance(role, type, grade), customTraining: undefined });
-  };
+  // 종류가 바뀌면 훈련 총량이 달라지므로 직접 입력한 훈련값은 초기화한다
+  const changeType = (type: CardType) =>
+    onChange({ ...card, type, enhanceLevel: maxEnhance(role, type), customTraining: undefined });
 
   // 빈칸은 "입력 안 함"(undefined)으로 둔다. 0으로 바꾸면 합계 계산에 섞여 들어간다.
   const changeStat = (key: StatKey, raw: string) => {
@@ -66,24 +63,7 @@ export default function CardForm({ role, card, onChange, onRemove }: Props) {
           </option>
         ))}
       </select>
-      <select
-        className={field}
-        value={card.grade}
-        onChange={(e) => {
-          const grade = Number(e.target.value) as Grade;
-          onChange({ ...card, grade, enhanceLevel: maxEnhance(role, card.type, grade), customTraining: undefined });
-        }}
-        aria-label="등급"
-      >
-        {CARD_GRADES[card.type].map((g) => (
-          <option key={g} value={g}>
-            {g}성
-          </option>
-        ))}
-      </select>
-      <p className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500`}>
-        {TRAINING_MAX_LEVEL[card.type][card.grade]}Lv
-      </p>
+      <p className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500`}>{TRAINING_MAX_LEVEL[card.type]}Lv</p>
 
       {CORE_STAT_KEYS[role].map((key) => (
         // type="number" 대신 inputMode="numeric": 모바일에서 숫자 키패드를 띄우면서

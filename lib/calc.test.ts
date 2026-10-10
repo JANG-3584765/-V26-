@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { BonusTable, CardTypeBonus, GradeBonus } from "./bonusTable";
+import type { BonusTable, CardTypeBonus } from "./bonusTable";
 import { coreScore, normalize } from "./calc";
 import type { CardInput, CardType } from "./types";
 
@@ -7,20 +7,17 @@ import type { CardInput, CardType } from "./types";
 const none: CardTypeBonus = { enhance: [{}], awaken: null };
 
 const batterTable = {
-  시즌: {},
-  라이브: {},
-  임팩트: { 4: { enhance: [{}, { 파워: 1 }, { 파워: 3, 정확: 1 }], awaken: { 선구: 5 } } },
-  시그니처: {},
-  골든글러브: {
-    4: { enhance: [{}, { 파워: 10 }], awaken: null },
-    5: { enhance: [{}, { 파워: 20 }], awaken: null },
-  },
-  국가대표: {},
-  "라이브 올스타": {},
-} satisfies Record<CardType, GradeBonus>;
+  시즌: none,
+  라이브: none,
+  임팩트: { enhance: [{}, { 파워: 1 }, { 파워: 3, 정확: 1 }], awaken: { 선구: 5 } },
+  시그니처: none,
+  골든글러브: none,
+  국가대표: none,
+  "라이브 올스타": none,
+} satisfies Record<CardType, CardTypeBonus>;
 
 const table: BonusTable = {
-  cardType: { pitcher: { ...batterTable, 임팩트: { 4: none } }, batter: batterTable },
+  cardType: { pitcher: { ...batterTable, 임팩트: none }, batter: batterTable },
   setDeck: {
     pitcher: [],
     batter: [
@@ -35,7 +32,6 @@ const table: BonusTable = {
 const card = (over: Partial<CardInput> = {}): CardInput => ({
   name: "테스트",
   type: "임팩트",
-  grade: 4,
   base: { 파워: 80, 정확: 70, 선구: 60, 인내: 50, 주루: 40, 수비: 30 },
   enhanceLevel: 0,
   awakened: false,
@@ -52,16 +48,6 @@ describe("normalize", () => {
   it("강화 단계의 누적 보너스와 각성을 더한다", () => {
     const r = normalize("batter", card({ enhanceLevel: 2, awakened: true }), noBonus, table);
     expect(r).toMatchObject({ 파워: 83, 정확: 71, 선구: 65 });
-  });
-
-  it("같은 종류라도 등급별 보너스를 따로 적용한다", () => {
-    const gg = (grade: 4 | 5) =>
-      normalize("batter", card({ type: "골든글러브", grade, enhanceLevel: 1 }), noBonus, table).파워;
-    expect([gg(4), gg(5)]).toEqual([90, 100]);
-  });
-
-  it("표에 없는 등급이면 오류로 알린다", () => {
-    expect(() => normalize("batter", card({ grade: 5 }), noBonus, table)).toThrow("임팩트 5성");
   });
 
   it("세트덱은 도달한 가장 높은 구간만 적용한다", () => {
