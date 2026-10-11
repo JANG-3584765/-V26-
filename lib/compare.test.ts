@@ -45,6 +45,6 @@ describe("compareCards", () => {
   it("직접 입력한 훈련값이 있으면 기본값 대신 쓴다", () => {
     const customTraining = { 파워: 20, 정확: 20, 선구: 0 };
     const [row] = compareCards("batter", [card("내 카드", { customTraining })], DEFAULT_CONDITION);
-    expect([row.core, row.trainingEstimated]).toEqual([250, false]);
+    expect(row.core).toBe(250);
   });
 });

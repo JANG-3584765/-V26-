@@ -102,9 +102,6 @@ export default function Comparator() {
               <div className="mt-1 flex gap-4 text-sm">
                 <span>핵심 {r.core ?? "–"}</span>
               </div>
-              {r.trainingEstimated && (
-                <p className="mt-1 text-xs text-amber-600">훈련값은 확률표가 없어 추정치입니다</p>
-              )}
             </li>
           ))}
         </ol>
