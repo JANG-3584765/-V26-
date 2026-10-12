@@ -34,8 +34,8 @@ export interface CardInput {
   name: string;
   type: CardType;
   base: Stats;
-  enhanceLevel: number;
-  awakened: boolean;
+  enhanceLevel: number; // 0~10강
+  awakenLevel: number; // 0~9각 (10강 이후, 각성 가능한 카드만)
   customTraining?: Stats; // 직접 입력한 스탯별 훈련값 (없으면 확률 기준 기본값)
 }
 

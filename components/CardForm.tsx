@@ -1,4 +1,4 @@
-import { maxEnhance } from "@/lib/bonusTable";
+import { maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { TRAINING_MAX_LEVEL } from "@/lib/training";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Role, type StatKey } from "@/lib/types";
 
@@ -25,9 +25,9 @@ export const ROW_HEIGHT = "h-9";
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm dark:border-zinc-700`;
 
 export default function CardForm({ role, card, onChange, onRemove }: Props) {
-  // 종류가 바뀌면 훈련 총량이 달라지므로 직접 입력한 훈련값은 초기화한다
+  // 종류가 바뀌면 강화·각성은 그 종류의 최대로 맞추고, 훈련 총량이 달라지므로 직접 입력한 훈련값은 초기화한다
   const changeType = (type: CardType) =>
-    onChange({ ...card, type, enhanceLevel: maxEnhance(role, type), customTraining: undefined });
+    onChange({ ...card, type, enhanceLevel: maxEnhance(type), awakenLevel: maxAwaken(type), customTraining: undefined });
 
   // 빈칸은 "입력 안 함"(undefined)으로 둔다. 0으로 바꾸면 합계 계산에 섞여 들어간다.
   const changeStat = (key: StatKey, raw: string) => {

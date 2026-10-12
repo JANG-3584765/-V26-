@@ -1,3 +1,4 @@
+import { awakenLevels, enhanceLevels } from "./enhance";
 import { CARD_TYPES, type CardType, type CommonCondition, type Role, type Stats } from "./types";
 
 // 레벨별 표는 "그 레벨까지의 누적 보너스"를 담는다. 인덱스 = 레벨, [0]은 보너스 없음.
@@ -6,7 +7,7 @@ export type LevelTable = Stats[];
 
 export interface CardTypeBonus {
   enhance: LevelTable;
-  awaken: Stats | null; // null = 각성 불가
+  awaken: LevelTable | null; // null = 각성 불가
 }
 
 export interface SetDeckTier {
@@ -21,13 +22,14 @@ export interface BonusTable {
   position: Record<Role, LevelTable>;
 }
 
-// TODO: 실제 수치를 받으면 채운다. 지금은 모든 보너스가 0인 틀.
-// 우선순위: 임팩트·골든글러브·시그니처·라이브 올스타 (실사용 덱의 대부분)
-const emptyByType = () =>
-  Object.fromEntries(CARD_TYPES.map((type) => [type, { enhance: [{}], awaken: {} }])) as Record<CardType, CardTypeBonus>;
+const byType = (role: Role) =>
+  Object.fromEntries(
+    CARD_TYPES.map((type) => [type, { enhance: enhanceLevels(role, type), awaken: awakenLevels(role, type) }]),
+  ) as Record<CardType, CardTypeBonus>;
 
+// TODO: 세트덱·라커룸·포지션 특훈 수치를 받으면 채운다. 지금은 보너스 0인 틀.
 export const BONUS_TABLE: BonusTable = {
-  cardType: { pitcher: emptyByType(), batter: emptyByType() },
+  cardType: { pitcher: byType("pitcher"), batter: byType("batter") },
   setDeck: { pitcher: [], batter: [] },
   locker: { pitcher: [{}], batter: [{}] },
   position: { pitcher: [{}], batter: [{}] },
@@ -42,4 +44,10 @@ export const DEFAULT_CONDITION: CommonCondition = {
   redistTargetPct: 10,
 };
 
-export const maxEnhance = (role: Role, type: CardType) => BONUS_TABLE.cardType[role][type].enhance.length - 1;
+// 최대 단계 (타자·투수 표 길이가 같아서 타자 기준으로 센다). 각성 불가 카드는 0.
+export const maxEnhance = (type: CardType) => BONUS_TABLE.cardType.batter[type].enhance.length - 1;
+export const maxAwaken = (type: CardType) => (BONUS_TABLE.cardType.batter[type].awaken?.length ?? 1) - 1;
+
+// 각성은 최대 강화(10강)를 마친 카드만 할 수 있다
+export const canAwaken = (type: CardType, enhanceLevel: number) =>
+  maxAwaken(type) > 0 && enhanceLevel === maxEnhance(type);

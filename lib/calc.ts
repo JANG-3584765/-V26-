@@ -28,7 +28,7 @@ export function normalize(
   const typeBonus = table.cardType[role][card.type];
   const bonuses: (Stats | null | undefined)[] = [
     typeBonus.enhance[card.enhanceLevel],
-    card.awakened ? typeBonus.awaken : null,
+    typeBonus.awaken?.[card.awakenLevel],
     setDeckBonus(table.setDeck[role], cond.setDeckScore),
     table.locker[role][cond.lockerLevel],
     table.position[role][cond.positionLevel],

@@ -5,25 +5,26 @@
 import { useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
+import EnhancePanel from "./EnhancePanel";
 import TrainingPanel from "./TrainingPanel";
-import { DEFAULT_CONDITION, maxEnhance } from "@/lib/bonusTable";
+import { DEFAULT_CONDITION, maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
 import { CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
 
 const MIN_CARDS = 2;
 const MAX_CARDS = 3;
 
-const newCard = (role: Role, n: number): CardInput => ({
+const newCard = (n: number): CardInput => ({
   name: `카드 ${n}`,
   type: "임팩트",
   base: {},
-  enhanceLevel: maxEnhance(role, "임팩트"),
-  awakened: true,
+  enhanceLevel: maxEnhance("임팩트"),
+  awakenLevel: maxAwaken("임팩트"),
 });
 
 export default function Comparator() {
   const [role, setRole] = useState<Role>("batter");
-  const [cards, setCards] = useState<CardInput[]>(() => [newCard("batter", 1), newCard("batter", 2)]);
+  const [cards, setCards] = useState<CardInput[]>(() => [newCard(1), newCard(2)]);
   const [cond, setCond] = useState<CommonCondition>(DEFAULT_CONDITION);
 
   // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
@@ -71,12 +72,14 @@ export default function Comparator() {
       {cards.length < MAX_CARDS && (
         <button
           type="button"
-          onClick={() => setCards([...cards, newCard(role, cards.length + 1)])}
+          onClick={() => setCards([...cards, newCard(cards.length + 1)])}
           className="w-full rounded-xl border border-dashed border-zinc-300 py-3 text-sm text-zinc-500 dark:border-zinc-700"
         >
           + 카드 추가
         </button>
       )}
+
+      <EnhancePanel role={role} cards={cards} onCardsChange={setCards} />
 
       <TrainingPanel
         role={role}

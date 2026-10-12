@@ -8,7 +8,7 @@ const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
   type: "임팩트",
   base: { 파워: 80, 정확: 70, 선구: 60 },
   enhanceLevel: 0,
-  awakened: false,
+  awakenLevel: 0,
   ...over,
 });
 

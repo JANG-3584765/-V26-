@@ -1,0 +1,88 @@
+import { ROW_HEIGHT } from "./CardForm";
+import { BONUS_TABLE, canAwaken, maxAwaken, maxEnhance } from "@/lib/bonusTable";
+import { CORE_STAT_KEYS, type CardInput, type Role } from "@/lib/types";
+
+interface Props {
+  role: Role;
+  cards: CardInput[];
+  onCardsChange: (cards: CardInput[]) => void;
+}
+
+const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm disabled:opacity-40 dark:border-zinc-700`;
+const range = (n: number) => Array.from({ length: n + 1 }, (_, i) => i);
+
+// 강화·각성으로 핵심 스탯이 얼마나 오르는지
+function coreBonus(role: Role, card: CardInput) {
+  const { enhance, awaken } = BONUS_TABLE.cardType[role][card.type];
+  const add = [enhance[card.enhanceLevel], awaken?.[card.awakenLevel] ?? {}];
+  return CORE_STAT_KEYS[role].reduce((sum, k) => sum + add.reduce((s, b) => s + (b[k] ?? 0), 0), 0);
+}
+
+export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
+  const update = (i: number, next: Partial<CardInput>) =>
+    onCardsChange(cards.map((c, j) => (j === i ? { ...c, ...next } : c)));
+
+  return (
+    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+      <h2 className="font-medium">강화·각성</h2>
+      <p className="mt-1 text-xs text-zinc-500">기본값은 최대 단계입니다. 각성은 10강 이후, 각성이 있는 카드만 가능합니다.</p>
+
+      <div className="mt-3 flex gap-1.5">
+        <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
+          {["", "강화", "각성", "핵심"].map((label, i) => (
+            <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
+              {label}
+            </span>
+          ))}
+        </div>
+        {cards.map((card, i) => {
+          const awakenable = canAwaken(card.type, card.enhanceLevel);
+          return (
+            <div key={i} className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span className={`${ROW_HEIGHT} truncate text-center text-sm leading-9`}>{card.name}</span>
+              <select
+                className={field}
+                value={card.enhanceLevel}
+                disabled={maxEnhance(card.type) === 0}
+                onChange={(e) => {
+                  const enhanceLevel = Number(e.target.value);
+                  // 10강 아래로 내리면 각성도 풀린다
+                  update(i, { enhanceLevel, awakenLevel: canAwaken(card.type, enhanceLevel) ? card.awakenLevel : 0 });
+                }}
+                aria-label={`${card.name} 강화`}
+              >
+                {maxEnhance(card.type) === 0 ? (
+                  <option value={0}>자료 없음</option>
+                ) : (
+                  range(maxEnhance(card.type)).map((n) => (
+                    <option key={n} value={n}>
+                      {n}강
+                    </option>
+                  ))
+                )}
+              </select>
+              <select
+                className={field}
+                value={card.awakenLevel}
+                disabled={!awakenable}
+                onChange={(e) => update(i, { awakenLevel: Number(e.target.value) })}
+                aria-label={`${card.name} 각성`}
+              >
+                {maxAwaken(card.type) === 0 ? (
+                  <option value={0}>불가</option>
+                ) : (
+                  range(maxAwaken(card.type)).map((n) => (
+                    <option key={n} value={n}>
+                      {n}각
+                    </option>
+                  ))
+                )}
+              </select>
+              <span className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500`}>+{coreBonus(role, card)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

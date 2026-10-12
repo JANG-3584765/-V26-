@@ -9,7 +9,7 @@ const none: CardTypeBonus = { enhance: [{}], awaken: null };
 const batterTable = {
   시즌: none,
   라이브: none,
-  임팩트: { enhance: [{}, { 파워: 1 }, { 파워: 3, 정확: 1 }], awaken: { 선구: 5 } },
+  임팩트: { enhance: [{}, { 파워: 1 }, { 파워: 3, 정확: 1 }], awaken: [{}, { 선구: 5 }] },
   시그니처: none,
   골든글러브: none,
   국가대표: none,
@@ -34,7 +34,7 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   type: "임팩트",
   base: { 파워: 80, 정확: 70, 선구: 60, 인내: 50, 주루: 40, 수비: 30 },
   enhanceLevel: 0,
-  awakened: false,
+  awakenLevel: 0,
   ...over,
 });
 
@@ -46,7 +46,7 @@ describe("normalize", () => {
   });
 
   it("강화 단계의 누적 보너스와 각성을 더한다", () => {
-    const r = normalize("batter", card({ enhanceLevel: 2, awakened: true }), noBonus, table);
+    const r = normalize("batter", card({ enhanceLevel: 2, awakenLevel: 1 }), noBonus, table);
     expect(r).toMatchObject({ 파워: 83, 정확: 71, 선구: 65 });
   });
 
