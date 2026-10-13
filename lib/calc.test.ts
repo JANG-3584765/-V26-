@@ -38,7 +38,7 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, redistTargetPct: 10 };
+const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, redistTargetPct: 10, applySpecial: false, specialTargetPct: 10 };
 
 describe("normalize", () => {
   it("보너스가 없으면 입력값 그대로", () => {

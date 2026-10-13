@@ -12,7 +12,9 @@ const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-const noTraining = { ...DEFAULT_CONDITION, applyTraining: false };
+// 훈련만 검사하려고 특훈은 끈다 (특훈은 special.test.ts)
+const trainingOnly = { ...DEFAULT_CONDITION, applySpecial: false };
+const noTraining = { ...trainingOnly, applyTraining: false };
 
 describe("compareCards", () => {
   it("핵심 합계 내림차순, 비어 있는 카드는 맨 뒤", () => {
@@ -34,7 +36,7 @@ describe("compareCards", () => {
     expect(compareCards("batter", cards, noTraining).map((r) => r.core)).toEqual([210, 210]);
 
     // 10% 기준 시그 타자 핵심 +47 / 임팩 타자 +34
-    const on = compareCards("batter", cards, DEFAULT_CONDITION);
+    const on = compareCards("batter", cards, trainingOnly);
     expect(on.map((r) => [r.card.name, r.core])).toEqual([
       ["시그", 257],
       ["임팩", 244],
@@ -44,7 +46,7 @@ describe("compareCards", () => {
 
   it("직접 입력한 훈련값이 있으면 기본값 대신 쓴다", () => {
     const customTraining = { 파워: 20, 정확: 20, 선구: 0 };
-    const [row] = compareCards("batter", [card("내 카드", { customTraining })], DEFAULT_CONDITION);
+    const [row] = compareCards("batter", [card("내 카드", { customTraining })], trainingOnly);
     expect(row.core).toBe(250);
   });
 });

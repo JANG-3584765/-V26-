@@ -37,6 +37,8 @@ export interface CardInput {
   enhanceLevel: number; // 0~10강
   awakenLevel: number; // 0~9각 (10강 이후, 각성 가능한 카드만)
   customTraining?: Stats; // 직접 입력한 스탯별 훈련값 (없으면 확률 기준 기본값)
+  customSpecial?: number; // 직접 입력한 특훈 재설정 결과: 파정(변구)에 들어간 추가 포인트
+  specialFA?: boolean; // FA 특훈(5회)을 했는지
 }
 
 // 비교하는 모든 카드에 똑같이 적용되는 조건
@@ -46,4 +48,6 @@ export interface CommonCondition {
   positionLevel: number;
   applyTraining: boolean;
   redistTargetPct: number; // 훈련 재분배 목표 확률(%)
+  applySpecial: boolean;
+  specialTargetPct: number; // 특훈 재설정 목표 확률(%)
 }

@@ -13,13 +13,13 @@ interface Props {
   onCondChange: (cond: CommonCondition) => void;
 }
 
-const TARGET_OPTIONS = [50, 30, 20, 10, 1];
+export const TARGET_OPTIONS = [50, 30, 20, 10, 1];
 const sumOf = (s: Stats) => Object.values(s).reduce((a, b) => a! + b!, 0)!;
 const pick = (s: Stats, keys: readonly StatKey[]): Stats => Object.fromEntries(keys.map((k) => [k, s[k] ?? 0]));
 
-const probText = (p: CoreProb) => `${p.cmp === "=" ? "" : p.cmp}${p.pct}%`;
+export const probText = (p: CoreProb) => `${p.cmp === "=" ? "" : p.cmp}${p.pct}%`;
 // 확률이 p%면 평균 100/p번 돌려야 한 번 나온다 (기하분포의 기댓값)
-const triesText = (p: CoreProb) => (p.cmp === ">" ? "1회" : `${p.cmp === "<" ? ">" : ""}${Math.max(1, Math.round(100 / p.pct))}회`);
+export const triesText = (p: CoreProb) => (p.cmp === ">" ? "1회" : `${p.cmp === "<" ? ">" : ""}${Math.max(1, Math.round(100 / p.pct))}회`);
 
 export default function TrainingPanel({ role, cards, onCardsChange, cond, onCondChange }: Props) {
   const [showTable, setShowTable] = useState(false);

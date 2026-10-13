@@ -42,6 +42,8 @@ export const DEFAULT_CONDITION: CommonCondition = {
   positionLevel: BONUS_TABLE.position.batter.length - 1,
   applyTraining: true,
   redistTargetPct: 10,
+  applySpecial: true,
+  specialTargetPct: 10,
 };
 
 // 최대 단계 (타자·투수 표 길이가 같아서 타자 기준으로 센다). 각성 불가 카드는 0.

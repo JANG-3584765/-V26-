@@ -105,9 +105,11 @@ export interface CoreProb {
 }
 
 // valueAtProb의 반대: 핵심 합이 주어졌을 때 재분배 1회에 그 값 이상이 나올 확률
-export function probOfCore(role: Role, type: CardType, core: number): CoreProb {
-  const table = REDIST_TABLE[role][type];
-  const i = core - table.from;
+export const probOfCore = (role: Role, type: CardType, core: number) => probAt(REDIST_TABLE[role][type], core);
+
+// 확률표에서 값 x 이상이 나올 확률 (특훈 재설정표에도 쓴다)
+export function probAt(table: RedistTable, x: number): CoreProb {
+  const i = x - table.from;
   if (i < 0) return { pct: table.probs[0], cmp: ">", table };
   if (i >= table.probs.length) return { pct: table.probs[table.probs.length - 1], cmp: "<", table };
   return { pct: table.probs[i], cmp: "=", table };
