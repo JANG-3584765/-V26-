@@ -43,7 +43,6 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
               <select
                 className={field}
                 value={card.enhanceLevel}
-                disabled={maxEnhance(card.type) === 0}
                 onChange={(e) => {
                   const enhanceLevel = Number(e.target.value);
                   // 10강 아래로 내리면 각성도 풀린다
@@ -51,15 +50,11 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
                 }}
                 aria-label={`${card.name} 강화`}
               >
-                {maxEnhance(card.type) === 0 ? (
-                  <option value={0}>자료 없음</option>
-                ) : (
-                  range(maxEnhance(card.type)).map((n) => (
-                    <option key={n} value={n}>
-                      {n}강
-                    </option>
-                  ))
-                )}
+                {range(maxEnhance(card.type)).map((n) => (
+                  <option key={n} value={n}>
+                    {n}강
+                  </option>
+                ))}
               </select>
               <select
                 className={field}

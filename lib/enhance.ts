@@ -11,7 +11,7 @@ const ENHANCE_COLUMNS = {
 
 type Row = readonly [number, number, number, number, number, number];
 
-// 5성 공통 (올스타·시그니처·라이브): +1~+5 모두 2, +6~+10은 한 열만 4
+// 5성 공통 (올스타·시그니처·라이브·국가대표): +1~+5 모두 2, +6~+10은 한 열만 4
 const FIVE_STAR: Row[] = [
   [2, 2, 2, 2, 2, 2],
   [2, 2, 2, 2, 2, 2],
@@ -26,11 +26,11 @@ const FIVE_STAR: Row[] = [
 ];
 
 // 강화 +1 ~ +10 단계별 상승치
-// TODO: 국가대표 강화표를 받으면 채운다. 그 전까지는 강화 없음(각성은 바로 가능)으로 계산한다.
 const ENHANCE_STEPS: Record<CardType, Row[]> = {
   "라이브 올스타": FIVE_STAR,
   시그니처: FIVE_STAR,
   라이브: FIVE_STAR,
+  국가대표: FIVE_STAR,
   골든글러브: [...FIVE_STAR.slice(0, 9), [5, 3, 3, 3, 3, 3]],
   임팩트: [
     [1, 1, 1, 1, 1, 1],
@@ -56,7 +56,6 @@ const ENHANCE_STEPS: Record<CardType, Row[]> = {
     [2, 3, 2, 2, 2, 2],
     [3, 2, 2, 2, 2, 2],
   ],
-  국가대표: [],
 };
 
 // 각성 1~9레벨 단계별 효과. 강화와 달리 타자·투수 표가 따로 있다. 표에 없는 카드는 각성 불가.
