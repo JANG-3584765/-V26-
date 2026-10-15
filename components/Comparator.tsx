@@ -6,6 +6,7 @@ import { useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
 import EnhancePanel from "./EnhancePanel";
+import ResultTable from "./ResultTable";
 import SpecialPanel from "./SpecialPanel";
 import TrainingPanel from "./TrainingPanel";
 import { DEFAULT_CONDITION, maxAwaken, maxEnhance } from "@/lib/bonusTable";
@@ -92,29 +93,7 @@ export default function Comparator() {
 
       <SpecialPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
 
-      <section>
-        <h2 className="font-semibold">결과 (핵심 합계 순)</h2>
-        <ol className="mt-2 space-y-2">
-          {rows.map((r, rank) => (
-            <li key={r.index} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-              <div className="flex items-baseline justify-between">
-                <span className="font-medium">
-                  {rank + 1}. {r.card.name}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  {r.card.type}
-                </span>
-              </div>
-              <div className="mt-1 flex gap-4 text-sm">
-                <span>핵심 {r.core ?? "–"}</span>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-2 text-xs text-zinc-500">
-          핵심: {role === "batter" ? "파워+정확+선구" : "변화+구위"} · 입력하지 않은 스탯이 있으면 합계는 –
-        </p>
-      </section>
+      <ResultTable role={role} rows={rows} />
     </div>
   );
 }
