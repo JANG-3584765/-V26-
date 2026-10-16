@@ -2,15 +2,17 @@
 
 // 입력값(useState)이 바뀔 때마다 다시 그려야 하므로 클라이언트 컴포넌트로 만든다.
 // https://nextjs.org/docs/app/building-your-application/rendering/client-components
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
 import EnhancePanel from "./EnhancePanel";
 import ResultTable from "./ResultTable";
+import ShareButton from "./ShareButton";
 import SpecialPanel from "./SpecialPanel";
 import TrainingPanel from "./TrainingPanel";
 import { DEFAULT_CONDITION, maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
+import { decodeShare, encodeShare } from "@/lib/share";
 import { CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
 
 const MIN_CARDS = 2;
@@ -25,9 +27,17 @@ const newCard = (n: number): CardInput => ({
 });
 
 export default function Comparator() {
-  const [role, setRole] = useState<Role>("batter");
-  const [cards, setCards] = useState<CardInput[]>(() => [newCard(1), newCard(2)]);
-  const [cond, setCond] = useState<CommonCondition>(DEFAULT_CONDITION);
+  // 링크(?s=...)로 열면 그 상태로 시작한다. 브라우저에서만 그리는 컴포넌트라 window를 바로 읽을 수 있다 (ComparatorClient).
+  // useState에 함수를 넘기면 첫 렌더에서 한 번만 실행된다. https://react.dev/reference/react/useState#avoiding-recreating-the-initial-state
+  const [shared] = useState(() => decodeShare(new URLSearchParams(window.location.search).get("s") ?? ""));
+  const [role, setRole] = useState<Role>(shared?.role ?? "batter");
+  const [cards, setCards] = useState<CardInput[]>(() => shared?.cards ?? [newCard(1), newCard(2)]);
+  const [cond, setCond] = useState<CommonCondition>(shared?.cond ?? DEFAULT_CONDITION);
+
+  // 입력이 바뀌면 주소창 링크도 바꿔 둔다 (새로고침·공유해도 그대로). 브라우저 주소(외부 시스템)를 맞추는 일이라 effect가 맞는 자리다.
+  useEffect(() => {
+    window.history.replaceState(null, "", `?s=${encodeShare({ role, cards, cond })}`);
+  }, [role, cards, cond]);
 
   // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
   const rows = compareCards(role, cards, cond);
@@ -94,6 +104,8 @@ export default function Comparator() {
       <SpecialPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
 
       <ResultTable role={role} rows={rows} />
+
+      <ShareButton />
     </div>
   );
 }
