@@ -1,4 +1,5 @@
 import type { BonusTable } from "./bonusTable";
+import { setDeckBonus } from "./setDeck";
 import {
   CORE_STAT_KEYS,
   STAT_KEYS,
@@ -7,15 +8,6 @@ import {
   type Role,
   type Stats,
 } from "./types";
-
-// 점수가 구간 하한 이상인 구간 중 가장 높은 구간의 보너스
-function setDeckBonus(tiers: BonusTable["setDeck"][Role], score: number): Stats {
-  let bonus: Stats = {};
-  for (const tier of tiers) {
-    if (score >= tier.minScore) bonus = tier.bonus;
-  }
-  return bonus;
-}
 
 // 입력 능력치에 모든 보너스를 더한 최종 능력치.
 // 사용자가 입력하지 않은 스탯은 결과에서도 비워 둔다 (보너스만으로 값을 만들어내지 않기 위해).
@@ -29,7 +21,7 @@ export function normalize(
   const bonuses: (Stats | null | undefined)[] = [
     typeBonus.enhance[card.enhanceLevel],
     typeBonus.awaken?.[card.awakenLevel],
-    setDeckBonus(table.setDeck[role], cond.setDeckScore),
+    setDeckBonus(role, card, cond),
     table.locker[role][cond.lockerLevel],
     table.position[role][cond.positionLevel],
   ];

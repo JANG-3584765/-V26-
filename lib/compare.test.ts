@@ -12,8 +12,8 @@ const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-// 훈련만 검사하려고 특훈은 끈다 (특훈은 special.test.ts)
-const trainingOnly = { ...DEFAULT_CONDITION, applySpecial: false };
+// 훈련만 검사하려고 특훈·세트덱은 끈다 (special.test.ts, setDeck.test.ts)
+const trainingOnly = { ...DEFAULT_CONDITION, applySpecial: false, setDeckScore: 0 };
 const noTraining = { ...trainingOnly, applyTraining: false };
 
 describe("compareCards", () => {

@@ -7,6 +7,7 @@ import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
 import EnhancePanel from "./EnhancePanel";
 import ResultTable from "./ResultTable";
+import SetDeckPanel from "./SetDeckPanel";
 import ShareButton from "./ShareButton";
 import SpecialPanel from "./SpecialPanel";
 import TrainingPanel from "./TrainingPanel";
@@ -64,7 +65,7 @@ export default function Comparator() {
         <div className="flex gap-1.5">
           {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
           <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-            {["이름", "종류", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
+            {["이름", "종류", ...(role === "batter" ? ["타순", "포지션"] : ["보직"]), "연도", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
               <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
                 {label}
               </span>
@@ -75,6 +76,7 @@ export default function Comparator() {
               key={i}
               role={role}
               card={card}
+              yearMatchAll={cond.yearMatchAll}
               onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
               onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
             />
@@ -102,6 +104,8 @@ export default function Comparator() {
       />
 
       <SpecialPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+
+      <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
 
       <ResultTable role={role} rows={rows} />
 

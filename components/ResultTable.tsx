@@ -32,7 +32,7 @@ export default function ResultTable({ role, rows }: Props) {
   return (
     <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
       <h2 className="font-medium">비교 결과</h2>
-      <p className="mt-1 text-xs text-zinc-500">강화·각성·훈련·특훈까지 반영한 최종 능력치 · 줄마다 가장 높은 값을 강조합니다</p>
+      <p className="mt-1 text-xs text-zinc-500">강화·각성·훈련·특훈·세트덱까지 반영한 최종 능력치 · 줄마다 가장 높은 값을 강조합니다</p>
 
       <div className="mt-3 flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">

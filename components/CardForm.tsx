@@ -1,10 +1,12 @@
 import { maxAwaken, maxEnhance } from "@/lib/bonusTable";
+import { LINEUPS, PITCHER_ROLES, POSITIONS, type Lineup, type PitcherRole, type Position } from "@/lib/setDeck";
 import { TRAINING_MAX_LEVEL } from "@/lib/training";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
   role: Role;
   card: CardInput;
+  yearMatchAll: boolean; // 연도 일괄 설정 (카드별 설정이 없을 때 따른다)
   onChange: (card: CardInput) => void;
   onRemove?: () => void; // 없으면 삭제 버튼을 숨긴다 (최소 2장 유지)
 }
@@ -24,7 +26,7 @@ export const SHORT_NAME: Record<CardType, string> = {
 export const ROW_HEIGHT = "h-9";
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm dark:border-zinc-700`;
 
-export default function CardForm({ role, card, onChange, onRemove }: Props) {
+export default function CardForm({ role, card, yearMatchAll, onChange, onRemove }: Props) {
   // 종류가 바뀌면 강화·각성은 그 종류의 최대로 맞추고, 훈련 총량이 달라지므로 직접 입력한 훈련값은 초기화한다
   const changeType = (type: CardType) =>
     onChange({ ...card, type, enhanceLevel: maxEnhance(type), awakenLevel: maxAwaken(type), customTraining: undefined, customSpecial: undefined, specialFA: undefined });
@@ -63,6 +65,43 @@ export default function CardForm({ role, card, onChange, onRemove }: Props) {
           </option>
         ))}
       </select>
+      {/* 세트덱 효과 조건: 타자는 타순·포지션, 투수는 보직 */}
+      {role === "batter" ? (
+        <>
+          <select className={field} value={card.lineup ?? "middle"} onChange={(e) => onChange({ ...card, lineup: e.target.value as Lineup })} aria-label="타순">
+            {LINEUPS.map((l) => (
+              <option key={l.value} value={l.value}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+          <select className={field} value={card.position ?? "DH"} onChange={(e) => onChange({ ...card, position: e.target.value as Position })} aria-label="포지션">
+            {POSITIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : (
+        <select className={field} value={card.pitcherRole ?? "starter"} onChange={(e) => onChange({ ...card, pitcherRole: e.target.value as PitcherRole })} aria-label="보직">
+          {PITCHER_ROLES.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+      )}
+      {/* 임팩트는 모든 연도에 해당해 항상 켜져 있다 */}
+      <label className={`${ROW_HEIGHT} flex items-center justify-center`}>
+        <input
+          type="checkbox"
+          checked={card.type === "임팩트" || (card.yearMatch ?? yearMatchAll)}
+          disabled={card.type === "임팩트"}
+          onChange={(e) => onChange({ ...card, yearMatch: e.target.checked })}
+          aria-label={`${card.name} 연도 효과`}
+        />
+      </label>
       <p className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500`}>{TRAINING_MAX_LEVEL[card.type]}Lv</p>
 
       {CORE_STAT_KEYS[role].map((key) => (

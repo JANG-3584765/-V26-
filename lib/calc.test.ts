@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { BonusTable, CardTypeBonus } from "./bonusTable";
+import { DEFAULT_CONDITION, type BonusTable, type CardTypeBonus } from "./bonusTable";
 import { coreScore, normalize } from "./calc";
 import type { CardInput, CardType } from "./types";
 
@@ -18,13 +18,6 @@ const batterTable = {
 
 const table: BonusTable = {
   cardType: { pitcher: { ...batterTable, 임팩트: none }, batter: batterTable },
-  setDeck: {
-    pitcher: [],
-    batter: [
-      { minScore: 100, bonus: { 파워: 1 } },
-      { minScore: 200, bonus: { 파워: 2 } },
-    ],
-  },
   locker: { pitcher: [{}], batter: [{}, { 주루: 2 }] },
   position: { pitcher: [{}], batter: [{}, { 수비: 3 }] },
 };
@@ -38,7 +31,8 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-const noBonus = { setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, redistTargetPct: 10, applySpecial: false, specialTargetPct: 10 };
+// 세트덱은 setDeck.test.ts에서 따로 검사한다
+const noBonus = { ...DEFAULT_CONDITION, setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, applySpecial: false };
 
 describe("normalize", () => {
   it("보너스가 없으면 입력값 그대로", () => {
@@ -48,12 +42,6 @@ describe("normalize", () => {
   it("강화 단계의 누적 보너스와 각성을 더한다", () => {
     const r = normalize("batter", card({ enhanceLevel: 2, awakenLevel: 1 }), noBonus, table);
     expect(r).toMatchObject({ 파워: 83, 정확: 71, 선구: 65 });
-  });
-
-  it("세트덱은 도달한 가장 높은 구간만 적용한다", () => {
-    const at = (setDeckScore: number) =>
-      normalize("batter", card(), { ...noBonus, setDeckScore }, table).파워;
-    expect([at(99), at(100), at(250)]).toEqual([80, 81, 82]);
   });
 
   it("라커룸·포지션 특훈 레벨 보너스를 더한다", () => {

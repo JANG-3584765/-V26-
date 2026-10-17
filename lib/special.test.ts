@@ -47,7 +47,7 @@ describe("비교에 반영", () => {
     awakenLevel: 0,
     ...over,
   });
-  const onlySpecial = { ...DEFAULT_CONDITION, applyTraining: false };
+  const onlySpecial = { ...DEFAULT_CONDITION, applyTraining: false, setDeckScore: 0 };
 
   it("기본값이면 시그 타자 핵심 +7", () => {
     expect(compareCards("batter", [card()], onlySpecial)[0].core).toBe(217);

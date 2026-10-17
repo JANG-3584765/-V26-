@@ -1,4 +1,5 @@
 import { awakenLevels, enhanceLevels } from "./enhance";
+import { DEFAULT_PICKS, MAX_SET_DECK_SCORE } from "./setDeck";
 import { CARD_TYPES, type CardType, type CommonCondition, type Role, type Stats } from "./types";
 
 // 레벨별 표는 "그 레벨까지의 누적 보너스"를 담는다. 인덱스 = 레벨, [0]은 보너스 없음.
@@ -10,14 +11,8 @@ export interface CardTypeBonus {
   awaken: LevelTable | null; // null = 각성 불가
 }
 
-export interface SetDeckTier {
-  minScore: number;
-  bonus: Stats;
-}
-
 export interface BonusTable {
   cardType: Record<Role, Record<CardType, CardTypeBonus>>;
-  setDeck: Record<Role, SetDeckTier[]>; // minScore 오름차순
   locker: Record<Role, LevelTable>;
   position: Record<Role, LevelTable>;
 }
@@ -27,17 +22,18 @@ const byType = (role: Role) =>
     CARD_TYPES.map((type) => [type, { enhance: enhanceLevels(role, type), awaken: awakenLevels(role, type) }]),
   ) as Record<CardType, CardTypeBonus>;
 
-// TODO: 세트덱·라커룸·포지션 특훈 수치를 받으면 채운다. 지금은 보너스 0인 틀.
+// TODO: 라커룸·포지션 특훈 수치를 받으면 채운다. 지금은 보너스 0인 틀. (세트덱은 setDeck.ts)
 export const BONUS_TABLE: BonusTable = {
   cardType: { pitcher: byType("pitcher"), batter: byType("batter") },
-  setDeck: { pitcher: [], batter: [] },
   locker: { pitcher: [{}], batter: [{}] },
   position: { pitcher: [{}], batter: [{}] },
 };
 
-// TODO: 보편적인 세트덱 스코어를 받으면 바꾼다. 라커룸·포지션 특훈은 최대 레벨이 기본.
+// 세트덱은 다 맞춘 덱 기준(200)과 추천 선택, 라커룸·포지션 특훈은 최대 레벨이 기본
 export const DEFAULT_CONDITION: CommonCondition = {
-  setDeckScore: 0,
+  setDeckScore: MAX_SET_DECK_SCORE,
+  setDeckPicks: DEFAULT_PICKS,
+  yearMatchAll: true,
   lockerLevel: BONUS_TABLE.locker.batter.length - 1,
   positionLevel: BONUS_TABLE.position.batter.length - 1,
   applyTraining: true,
