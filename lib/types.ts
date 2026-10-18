@@ -41,6 +41,7 @@ export interface CardInput {
   customTraining?: Stats; // 직접 입력한 스탯별 훈련값 (없으면 확률 기준 기본값)
   customSpecial?: number; // 직접 입력한 특훈 재설정 결과: 파정(변구)에 들어간 추가 포인트
   specialFA?: boolean; // FA 특훈(5회)을 했는지
+  potm?: boolean; // 이달의 선수로 선정됐는지
   // 세트덱 조건 (없으면 기본값: 연도는 일괄 설정, 중심타선, 지명타자, 선발)
   yearMatch?: boolean;
   lineup?: Lineup;

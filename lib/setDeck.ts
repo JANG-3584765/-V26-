@@ -1,3 +1,4 @@
+import { canPotm } from "./potm";
 import { STAT_KEYS, type CardInput, type CardType, type CommonCondition, type Role, type Stats } from "./types";
 
 // 세트덱 스코어 단계별 효과. 단계마다 두 효과 중 하나를 고른다.
@@ -38,6 +39,7 @@ export interface CardContext {
   lineup: Lineup;
   infield: boolean; // 내야·포수 (아니면 외야·지명)
   starter: boolean;
+  potm: boolean; // 이달의 선수
 }
 
 export function cardContext(card: CardInput, cond: CommonCondition): CardContext {
@@ -48,6 +50,7 @@ export function cardContext(card: CardInput, cond: CommonCondition): CardContext
     lineup: card.lineup ?? "middle",
     infield: INFIELD.includes(card.position ?? "DH"),
     starter: (card.pitcherRole ?? "starter") === "starter",
+    potm: !!card.potm && canPotm(card.type),
   };
 }
 
@@ -70,10 +73,10 @@ export interface Tier {
 }
 
 // 카드 종류 조건
-const SPECIAL: CardType[] = ["임팩트", "국가대표", "시그니처", "골든글러브"]; // TODO: 이달의 선수로 선정된 라이브도 스페셜
 const is = (...types: CardType[]) => (c: CardContext) => types.includes(c.type);
-const special = is(...SPECIAL);
-const regular = is("시즌", "라이브", "라이브 올스타");
+// 스페셜: 임팩트·국가대표·시그니처·골든글러브, 그리고 이달의 선수로 선정된 라이브
+const special = (c: CardContext) => is("임팩트", "국가대표", "시그니처", "골든글러브")(c) || (c.type === "라이브" && c.potm);
+const regular = (c: CardContext) => !special(c);
 const fourStar = is("임팩트"); // 지금 다루는 카드 중 4성은 임팩트뿐 (3성 카드는 비교 대상이 아니다)
 const fiveStar = (c: CardContext) => c.type !== "임팩트";
 const never = () => false;
@@ -116,8 +119,8 @@ export const SET_DECK_TIERS: Tier[] = [
     { label: "3성 +2", when: never, effect: all(2) },
     { label: "4성 (타자 파워·선구 / 투수 구위·변화 +2)", when: fourStar, effect: { batter: { 파워: 2, 선구: 2 }, pitcher: { 구위: 2, 변화: 2 } } },
   ] },
-  // TODO: 드림/나눔 효과의 상승 수치를 받으면 채운다. 선택팀처럼 소속 팀 선수가 받는다 (골글은 6장까지 소속 인정).
-  { score: 110, rec: 0, options: [{ label: "드림 (수치 미확인)", effect: all(0) }, { label: "나눔 (수치 미확인)", effect: all(0) }] },
+  // 드림(두산·롯데·삼성·SSG·KT) / 나눔(KIA·한화·LG·NC·키움): 선택팀처럼 소속 팀 선수가 받는다 (골글은 6장까지 소속 인정)
+  { score: 110, rec: 0, options: [{ label: "드림 +1", effect: all(1) }, { label: "나눔 +1", effect: all(1) }] },
   { score: 115, rec: 1, options: [
     { label: "하위타선 정확·주루·수비 +2", when: (c) => c.lineup === "bottom", effect: batter({ 정확: 2, 주루: 2, 수비: 2 }) },
     { label: "불펜 제구·구위·지구력 +2", when: (c) => !c.starter, effect: pitcher({ 제구: 2, 구위: 2, 지구력: 2 }) },

@@ -1,4 +1,5 @@
 import type { BonusTable } from "./bonusTable";
+import { potmBonus } from "./potm";
 import { setDeckBonus } from "./setDeck";
 import {
   CORE_STAT_KEYS,
@@ -22,6 +23,7 @@ export function normalize(
     typeBonus.enhance[card.enhanceLevel],
     typeBonus.awaken?.[card.awakenLevel],
     setDeckBonus(role, card, cond),
+    potmBonus(role, card),
     table.locker[role][cond.lockerLevel],
     table.position[role][cond.positionLevel],
   ];

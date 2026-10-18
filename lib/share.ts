@@ -1,5 +1,6 @@
 import { canAwaken, DEFAULT_CONDITION, maxAwaken, maxEnhance } from "./bonusTable";
 import { LINEUPS, MAX_SET_DECK_SCORE, PITCHER_ROLES, POSITIONS, SET_DECK_TIERS } from "./setDeck";
+import { canPotm } from "./potm";
 import { canFA } from "./special";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role, type Stats } from "./types";
 
@@ -22,6 +23,7 @@ interface PackedCard {
   tr?: number[]; // 직접 입력한 훈련값 (핵심 스탯 순서)
   sp?: number; // 직접 입력한 특훈 재설정 결과
   fa?: 1; // FA 특훈
+  pm?: 1; // 이달의 선수
   y?: 0 | 1; // 연도 (카드별로 따로 정했을 때만)
   lu?: number; // 타순 (LINEUPS 순번)
   po?: number; // 포지션 (POSITIONS 순번)
@@ -72,6 +74,7 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       ...(card.customTraining && { tr: keys.map((k) => card.customTraining![k] ?? 0) }),
       ...(card.customSpecial !== undefined && { sp: card.customSpecial }),
       ...(card.specialFA && { fa: 1 as const }),
+      ...(card.potm && { pm: 1 as const }),
       ...(card.yearMatch !== undefined && { y: card.yearMatch ? (1 as const) : (0 as const) }),
       ...(card.lineup && { lu: LINEUPS.findIndex((l) => l.value === card.lineup) }),
       ...(card.position && { po: POSITIONS.findIndex((p) => p.value === card.position) }),
@@ -122,6 +125,7 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     customTraining,
     customSpecial: p.sp,
     specialFA: p.fa === 1 && canFA(type) ? true : undefined,
+    potm: p.pm === 1 && canPotm(type) ? true : undefined,
     yearMatch: p.y === undefined ? undefined : p.y === 1,
     lineup: p.lu === undefined ? undefined : LINEUPS[p.lu].value,
     position: p.po === undefined ? undefined : POSITIONS[p.po].value,

@@ -65,7 +65,7 @@ export default function Comparator() {
         <div className="flex gap-1.5">
           {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
           <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-            {["이름", "종류", ...(role === "batter" ? ["타순", "포지션"] : ["보직"]), "연도", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
+            {["이름", "종류", ...(role === "batter" ? ["타순", "포지션"] : ["보직"]), "연도", "이달", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
               <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
                 {label}
               </span>
