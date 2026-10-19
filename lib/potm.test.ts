@@ -10,6 +10,7 @@ const card = (type: CardType, potm = true): CardInput => ({
   base: { 파워: 80, 정확: 70, 선구: 60 },
   enhanceLevel: 0,
   awakenLevel: 0,
+  positionLevel: 0,
   potm,
 });
 

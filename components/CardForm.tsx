@@ -1,6 +1,7 @@
 import { maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { canPotm } from "@/lib/potm";
-import { LINEUPS, PITCHER_ROLES, POSITIONS, type Lineup, type PitcherRole, type Position } from "@/lib/setDeck";
+import { MAX_POSITION_LEVEL } from "@/lib/positionTraining";
+import { LINEUPS, PITCHER_SLOTS, POSITIONS, type Lineup, type PitcherSlot, type Position } from "@/lib/setDeck";
 import { TRAINING_MAX_LEVEL } from "@/lib/training";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CardType, type Role, type StatKey } from "@/lib/types";
 
@@ -85,14 +86,27 @@ export default function CardForm({ role, card, yearMatchAll, onChange, onRemove 
           </select>
         </>
       ) : (
-        <select className={field} value={card.pitcherRole ?? "starter"} onChange={(e) => onChange({ ...card, pitcherRole: e.target.value as PitcherRole })} aria-label="보직">
-          {PITCHER_ROLES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
+        <select className={field} value={card.pitcherSlot ?? "SP1"} onChange={(e) => onChange({ ...card, pitcherSlot: e.target.value as PitcherSlot })} aria-label="보직">
+          {PITCHER_SLOTS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
             </option>
           ))}
         </select>
       )}
+      {/* 포지션 특훈 단계: 위에서 고른 포지션(투수는 보직 칸)의 표로 계산한다 */}
+      <select
+        className={field}
+        value={card.positionLevel ?? MAX_POSITION_LEVEL}
+        onChange={(e) => onChange({ ...card, positionLevel: Number(e.target.value) })}
+        aria-label="포지션 특훈 단계"
+      >
+        {Array.from({ length: MAX_POSITION_LEVEL + 1 }, (_, n) => MAX_POSITION_LEVEL - n).map((n) => (
+          <option key={n} value={n}>
+            {n}단
+          </option>
+        ))}
+      </select>
       {/* 임팩트는 모든 연도에 해당해 항상 켜져 있다 */}
       <label className={`${ROW_HEIGHT} flex items-center justify-center`}>
         <input

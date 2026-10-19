@@ -20,6 +20,7 @@ const state: ShareState = {
       yearMatch: true,
       lineup: "top",
       position: "SS",
+      positionLevel: 15,
     },
   ],
 };
@@ -38,9 +39,10 @@ describe("encodeShare / decodeShare", () => {
           yearMatch: undefined,
           lineup: undefined,
           position: undefined,
-          pitcherRole: undefined,
+          pitcherSlot: undefined,
+          positionLevel: undefined,
         },
-        { ...state.cards[1], pitcherRole: undefined },
+        { ...state.cards[1], pitcherSlot: undefined },
       ],
     });
   });
@@ -55,7 +57,7 @@ describe("encodeShare / decodeShare", () => {
   });
 
   // 링크는 누구나 고칠 수 있으므로 범위를 벗어난 값은 받지 않는다
-  type Raw = { c: { pk: string; ds: number }; k: { t: number; b: number[]; e: number; a: number; fa?: number; po?: number }[] };
+  type Raw = { c: { pk: string; ds: number }; k: { t: number; b: number[]; e: number; a: number; fa?: number; po?: number; pl?: number }[] };
   const tamper = (fn: (p: Raw) => void) => {
     const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodeShare(state).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0))));
     fn(json);
@@ -72,6 +74,7 @@ describe("encodeShare / decodeShare", () => {
     expect(tamper((p) => (p.c.pk = "01"))).toBeNull(); // 세트덱 선택 개수가 단계 수와 다름
     expect(tamper((p) => (p.c.ds = 999))).toBeNull(); // 세트덱 스코어 범위 밖
     expect(tamper((p) => (p.k[1].po = 20))).toBeNull(); // 없는 포지션
+    expect(tamper((p) => (p.k[1].pl = 21))).toBeNull(); // 포지션 특훈 21단계
   });
 
   it("FA가 안 되는 카드의 FA 표시는 무시한다", () => {

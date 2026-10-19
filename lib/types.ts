@@ -1,4 +1,4 @@
-import type { Lineup, PitcherRole, Position } from "./setDeck";
+import type { Lineup, PitcherSlot, Position } from "./setDeck";
 
 export type Role = "pitcher" | "batter";
 
@@ -42,11 +42,12 @@ export interface CardInput {
   customSpecial?: number; // 직접 입력한 특훈 재설정 결과: 파정(변구)에 들어간 추가 포인트
   specialFA?: boolean; // FA 특훈(5회)을 했는지
   potm?: boolean; // 이달의 선수로 선정됐는지
-  // 세트덱 조건 (없으면 기본값: 연도는 일괄 설정, 중심타선, 지명타자, 선발)
+  // 세트덱·포지션 특훈 조건 (없으면 기본값: 연도는 일괄 설정, 중심타선, 지명타자, 선발1, 특훈 20단계)
   yearMatch?: boolean;
   lineup?: Lineup;
   position?: Position;
-  pitcherRole?: PitcherRole;
+  pitcherSlot?: PitcherSlot;
+  positionLevel?: number; // 포지션 특훈 단계 (0~20)
 }
 
 // 비교하는 모든 카드에 똑같이 적용되는 조건
@@ -55,7 +56,6 @@ export interface CommonCondition {
   setDeckPicks: (0 | 1)[]; // 세트덱 단계별로 고른 효과 (SET_DECK_TIERS 순서)
   yearMatchAll: boolean; // 연도 효과 일괄 적용
   lockerLevel: number;
-  positionLevel: number;
   applyTraining: boolean;
   redistTargetPct: number; // 훈련 재분배 목표 확률(%)
   applySpecial: boolean;

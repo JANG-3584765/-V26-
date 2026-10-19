@@ -19,7 +19,6 @@ const batterTable = {
 const table: BonusTable = {
   cardType: { pitcher: { ...batterTable, 임팩트: none }, batter: batterTable },
   locker: { pitcher: [{}], batter: [{}, { 주루: 2 }] },
-  position: { pitcher: [{}], batter: [{}, { 수비: 3 }] },
 };
 
 const card = (over: Partial<CardInput> = {}): CardInput => ({
@@ -28,11 +27,12 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
   base: { 파워: 80, 정확: 70, 선구: 60, 인내: 50, 주루: 40, 수비: 30 },
   enhanceLevel: 0,
   awakenLevel: 0,
+  positionLevel: 0, // 포지션 특훈은 positionTraining.test.ts에서 따로 검사
   ...over,
 });
 
 // 세트덱은 setDeck.test.ts에서 따로 검사한다
-const noBonus = { ...DEFAULT_CONDITION, setDeckScore: 0, lockerLevel: 0, positionLevel: 0, applyTraining: false, applySpecial: false };
+const noBonus = { ...DEFAULT_CONDITION, setDeckScore: 0, lockerLevel: 0, applyTraining: false, applySpecial: false };
 
 describe("normalize", () => {
   it("보너스가 없으면 입력값 그대로", () => {
@@ -44,9 +44,13 @@ describe("normalize", () => {
     expect(r).toMatchObject({ 파워: 83, 정확: 71, 선구: 65 });
   });
 
-  it("라커룸·포지션 특훈 레벨 보너스를 더한다", () => {
-    const r = normalize("batter", card(), { ...noBonus, lockerLevel: 1, positionLevel: 1 }, table);
-    expect(r).toMatchObject({ 주루: 42, 수비: 33 });
+  it("라커룸 레벨 보너스를 더한다", () => {
+    const r = normalize("batter", card(), { ...noBonus, lockerLevel: 1 }, table);
+    expect(r).toMatchObject({ 주루: 42 });
+  });
+
+  it("포지션 특훈 단계만큼 더한다: 지명 1단계 정확 +1", () => {
+    expect(normalize("batter", card({ positionLevel: 1 }), noBonus, table)).toMatchObject({ 정확: 71 });
   });
 
   it("입력하지 않은 스탯은 보너스가 있어도 비워 둔다", () => {

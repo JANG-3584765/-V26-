@@ -45,6 +45,7 @@ describe("비교에 반영", () => {
     base: { 파워: 80, 정확: 70, 선구: 60 },
     enhanceLevel: 0,
     awakenLevel: 0,
+    positionLevel: 0,
     ...over,
   });
   const onlySpecial = { ...DEFAULT_CONDITION, applyTraining: false, setDeckScore: 0 };

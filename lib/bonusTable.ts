@@ -14,7 +14,6 @@ export interface CardTypeBonus {
 export interface BonusTable {
   cardType: Record<Role, Record<CardType, CardTypeBonus>>;
   locker: Record<Role, LevelTable>;
-  position: Record<Role, LevelTable>;
 }
 
 const byType = (role: Role) =>
@@ -22,20 +21,18 @@ const byType = (role: Role) =>
     CARD_TYPES.map((type) => [type, { enhance: enhanceLevels(role, type), awaken: awakenLevels(role, type) }]),
   ) as Record<CardType, CardTypeBonus>;
 
-// TODO: 라커룸·포지션 특훈 수치를 받으면 채운다. 지금은 보너스 0인 틀. (세트덱은 setDeck.ts)
+// TODO: 라커룸 수치를 받으면 채운다. 지금은 보너스 0인 틀. (세트덱은 setDeck.ts, 포지션 특훈은 positionTraining.ts)
 export const BONUS_TABLE: BonusTable = {
   cardType: { pitcher: byType("pitcher"), batter: byType("batter") },
   locker: { pitcher: [{}], batter: [{}] },
-  position: { pitcher: [{}], batter: [{}] },
 };
 
-// 세트덱은 다 맞춘 덱 기준(200)과 추천 선택, 라커룸·포지션 특훈은 최대 레벨이 기본
+// 세트덱은 다 맞춘 덱 기준(200)과 추천 선택, 라커룸은 최대 레벨이 기본
 export const DEFAULT_CONDITION: CommonCondition = {
   setDeckScore: MAX_SET_DECK_SCORE,
   setDeckPicks: DEFAULT_PICKS,
   yearMatchAll: true,
   lockerLevel: BONUS_TABLE.locker.batter.length - 1,
-  positionLevel: BONUS_TABLE.position.batter.length - 1,
   applyTraining: true,
   redistTargetPct: 10,
   applySpecial: true,

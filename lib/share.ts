@@ -1,5 +1,6 @@
 import { canAwaken, DEFAULT_CONDITION, maxAwaken, maxEnhance } from "./bonusTable";
-import { LINEUPS, MAX_SET_DECK_SCORE, PITCHER_ROLES, POSITIONS, SET_DECK_TIERS } from "./setDeck";
+import { MAX_POSITION_LEVEL } from "./positionTraining";
+import { LINEUPS, MAX_SET_DECK_SCORE, PITCHER_SLOTS, POSITIONS, SET_DECK_TIERS } from "./setDeck";
 import { canPotm } from "./potm";
 import { canFA } from "./special";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role, type Stats } from "./types";
@@ -27,7 +28,8 @@ interface PackedCard {
   y?: 0 | 1; // 연도 (카드별로 따로 정했을 때만)
   lu?: number; // 타순 (LINEUPS 순번)
   po?: number; // 포지션 (POSITIONS 순번)
-  pr?: number; // 투수 보직 (PITCHER_ROLES 순번)
+  pr?: number; // 투수 배치 칸 (PITCHER_SLOTS 순번)
+  pl?: number; // 포지션 특훈 단계
 }
 interface Packed {
   v: 1;
@@ -78,7 +80,8 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       ...(card.yearMatch !== undefined && { y: card.yearMatch ? (1 as const) : (0 as const) }),
       ...(card.lineup && { lu: LINEUPS.findIndex((l) => l.value === card.lineup) }),
       ...(card.position && { po: POSITIONS.findIndex((p) => p.value === card.position) }),
-      ...(card.pitcherRole && { pr: PITCHER_ROLES.findIndex((r) => r.value === card.pitcherRole) }),
+      ...(card.pitcherSlot && { pr: PITCHER_SLOTS.findIndex((s) => s.value === card.pitcherSlot) }),
+      ...(card.positionLevel !== undefined && { pl: card.positionLevel }),
     })),
   };
   return toBase64Url(JSON.stringify(packed));
@@ -114,7 +117,8 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
   if (p.y !== undefined && p.y !== 0 && p.y !== 1) return null;
   if (p.lu !== undefined && !isInt(p.lu, 0, LINEUPS.length - 1)) return null;
   if (p.po !== undefined && !isInt(p.po, 0, POSITIONS.length - 1)) return null;
-  if (p.pr !== undefined && !isInt(p.pr, 0, PITCHER_ROLES.length - 1)) return null;
+  if (p.pr !== undefined && !isInt(p.pr, 0, PITCHER_SLOTS.length - 1)) return null;
+  if (p.pl !== undefined && !isInt(p.pl, 0, MAX_POSITION_LEVEL)) return null;
 
   return {
     name: p.n.slice(0, 20),
@@ -129,7 +133,8 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     yearMatch: p.y === undefined ? undefined : p.y === 1,
     lineup: p.lu === undefined ? undefined : LINEUPS[p.lu].value,
     position: p.po === undefined ? undefined : POSITIONS[p.po].value,
-    pitcherRole: p.pr === undefined ? undefined : PITCHER_ROLES[p.pr].value,
+    pitcherSlot: p.pr === undefined ? undefined : PITCHER_SLOTS[p.pr].value,
+    positionLevel: p.pl,
   };
 }
 

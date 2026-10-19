@@ -8,7 +8,8 @@ import { STAT_KEYS, type CardInput, type CardType, type CommonCondition, type Ro
 
 export type Lineup = "top" | "middle" | "bottom"; // 상위 1~2 / 중심 3~5 / 하위 6~9번
 export type Position = "C" | "1B" | "2B" | "3B" | "SS" | "LF" | "CF" | "RF" | "DH";
-export type PitcherRole = "starter" | "bullpen";
+// 투수 배치 칸: 선발 1~5, 중계 1~8, 마무리
+export type PitcherSlot = "SP1" | "SP2" | "SP3" | "SP4" | "SP5" | "RP1" | "RP2" | "RP3" | "RP4" | "RP5" | "RP6" | "RP7" | "RP8" | "CP";
 
 export const POSITIONS: { value: Position; label: string }[] = [
   { value: "C", label: "포수" },
@@ -27,9 +28,10 @@ export const LINEUPS: { value: Lineup; label: string }[] = [
   { value: "middle", label: "중심" },
   { value: "bottom", label: "하위" },
 ];
-export const PITCHER_ROLES: { value: PitcherRole; label: string }[] = [
-  { value: "starter", label: "선발" },
-  { value: "bullpen", label: "불펜" },
+export const PITCHER_SLOTS: { value: PitcherSlot; label: string }[] = [
+  ...([1, 2, 3, 4, 5] as const).map((n) => ({ value: `SP${n}` as PitcherSlot, label: `선발${n}` })),
+  ...([1, 2, 3, 4, 5, 6, 7, 8] as const).map((n) => ({ value: `RP${n}` as PitcherSlot, label: `중계${n}` })),
+  { value: "CP", label: "마무리" },
 ];
 
 // 효과 조건을 판단하는 데 필요한 카드 정보
@@ -49,7 +51,8 @@ export function cardContext(card: CardInput, cond: CommonCondition): CardContext
     year: card.type === "임팩트" || (card.yearMatch ?? cond.yearMatchAll),
     lineup: card.lineup ?? "middle",
     infield: INFIELD.includes(card.position ?? "DH"),
-    starter: (card.pitcherRole ?? "starter") === "starter",
+    // 세트덱의 선발/불펜 조건: 선발 칸이면 선발, 중계·마무리는 불펜
+    starter: (card.pitcherSlot ?? "SP1").startsWith("SP"),
     potm: !!card.potm && canPotm(card.type),
   };
 }
