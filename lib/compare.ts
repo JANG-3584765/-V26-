@@ -1,5 +1,8 @@
 import { BONUS_TABLE } from "./bonusTable";
 import { coreScore, normalize } from "./calc";
+import { positionTrainingBonus } from "./positionTraining";
+import { potmBonus } from "./potm";
+import { setDeckBonus } from "./setDeck";
 import { defaultSpecialExtra, specialCore, specialSpec } from "./special";
 import { distribute, trainingBonus } from "./training";
 import type { CardInput, CommonCondition, Role, Stats } from "./types";
@@ -28,6 +31,27 @@ export const cardSpecialExtra = (card: CardInput, cond: CommonCondition) =>
 export function cardSpecial(role: Role, card: CardInput, cond: CommonCondition): Stats {
   if (!cond.applySpecial || specialSpec(card.type, card.specialFA).count === 0) return {};
   return distribute(role, specialCore(card.type, !!card.specialFA, cardSpecialExtra(card, cond)));
+}
+
+export interface BreakdownRow {
+  label: string;
+  stats: Stats;
+}
+
+// 최종 능력치가 어디서 얼마씩 왔는지 (게임 화면 수치와 대조할 때 어느 요소가 다른지 찾는 용도).
+// 모두 더하면 compareCards의 최종 능력치와 같다. 라커룸은 수치가 아직 없어 뺐다.
+export function breakdown(role: Role, card: CardInput, cond: CommonCondition): BreakdownRow[] {
+  const { enhance, awaken } = BONUS_TABLE.cardType[role][card.type];
+  return [
+    { label: "기본", stats: card.base },
+    { label: "강화", stats: enhance[card.enhanceLevel] ?? {} },
+    { label: "각성", stats: awaken?.[card.awakenLevel] ?? {} },
+    { label: "훈련", stats: cardTraining(role, card, cond) },
+    { label: "특훈", stats: cardSpecial(role, card, cond) },
+    { label: "세트덱", stats: setDeckBonus(role, card, cond) },
+    { label: "포지션 특훈", stats: positionTrainingBonus(role, card) },
+    { label: "이달의 선수", stats: potmBonus(role, card) },
+  ];
 }
 
 // 합계가 비어 있는(null) 카드는 맨 뒤로 보낸다. 합계는 항상 0 이상이라 -1로 대신한다.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CONDITION } from "./bonusTable";
-import { compareCards } from "./compare";
+import { breakdown, compareCards } from "./compare";
 import type { CardInput } from "./types";
 
 const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
@@ -49,5 +49,20 @@ describe("compareCards", () => {
     const customTraining = { 파워: 20, 정확: 20, 선구: 0 };
     const [row] = compareCards("batter", [card("내 카드", { customTraining })], trainingOnly);
     expect(row.core).toBe(250);
+  });
+});
+
+describe("breakdown", () => {
+  it("요소별 값을 모두 더하면 최종 능력치와 같다 (기본 조건 전부 켠 상태)", () => {
+    const c = card("시그", { type: "시그니처", positionLevel: 20, potm: true });
+    const [row] = compareCards("batter", [c], DEFAULT_CONDITION);
+    const sum = (key: "파워" | "정확" | "선구") => breakdown("batter", c, DEFAULT_CONDITION).reduce((s, r) => s + (r.stats[key] ?? 0), 0);
+    expect({ 파워: sum("파워"), 정확: sum("정확"), 선구: sum("선구") }).toEqual(row.stats);
+  });
+
+  it("시그 10강 9각: 강화 24·24·22, 각성 5·5·5", () => {
+    const rows = breakdown("batter", card("시그", { type: "시그니처", enhanceLevel: 10, awakenLevel: 9 }), DEFAULT_CONDITION);
+    expect(rows.find((r) => r.label === "강화")!.stats).toMatchObject({ 파워: 24, 정확: 24, 선구: 22 });
+    expect(rows.find((r) => r.label === "각성")!.stats).toMatchObject({ 파워: 5, 정확: 5, 선구: 5 });
   });
 });

@@ -1,10 +1,11 @@
 import { ROW_HEIGHT, SHORT_NAME } from "./CardForm";
-import type { ResultRow } from "@/lib/compare";
-import { CORE_STAT_KEYS, type Role } from "@/lib/types";
+import { breakdown, type ResultRow } from "@/lib/compare";
+import { CORE_STAT_KEYS, type CommonCondition, type Role } from "@/lib/types";
 
 interface Props {
   role: Role;
   rows: ResultRow[]; // 핵심 합계 순으로 정렬된 결과
+  cond: CommonCondition;
 }
 
 const cell = `${ROW_HEIGHT} flex flex-col items-center justify-center rounded-md text-sm tabular-nums`;
@@ -23,7 +24,7 @@ function Value({ value, best }: { value: number | null | undefined; best: number
 
 const bestOf = (values: (number | null | undefined)[]) => Math.max(...values.map((v) => v ?? -Infinity));
 
-export default function ResultTable({ role, rows }: Props) {
+export default function ResultTable({ role, rows, cond }: Props) {
   // 열은 입력 순서대로 두고, 순위는 이름 옆에 표시한다 (위쪽 입력 칸과 같은 열 = 같은 카드)
   const rankOf = new Map(rows.map((r, i) => [r.index, i + 1]));
   const columns = [...rows].sort((a, b) => a.index - b.index);
@@ -58,6 +59,50 @@ export default function ResultTable({ role, rows }: Props) {
       <p className="mt-2 text-xs text-zinc-500">
         핵심: {role === "batter" ? "파워+정확+선구" : "변화+구위"} · 입력하지 않은 스탯이 있으면 –
       </p>
+
+      {/* 게임 화면 수치와 대조할 때 어느 요소에서 차이가 나는지 찾는 용도 */}
+      <details className="mt-3">
+        <summary className="cursor-pointer text-sm font-medium">카드별 내역</summary>
+        <div className="mt-2 space-y-3">
+          {columns.map((r) => (
+            <table key={r.index} className="w-full text-sm tabular-nums">
+              <caption className="pb-1 text-left font-medium">
+                {r.card.name} <span className="text-xs text-zinc-500">{SHORT_NAME[r.card.type]}</span>
+              </caption>
+              <thead>
+                <tr className="text-xs text-zinc-500">
+                  <th className="text-left font-normal" />
+                  {statKeys.map((k) => (
+                    <th key={k} className="text-right font-normal">
+                      {k}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {breakdown(role, r.card, cond).map((b) => (
+                  <tr key={b.label} className="border-t border-zinc-100 dark:border-zinc-800">
+                    <td className="py-0.5 text-zinc-500">{b.label}</td>
+                    {statKeys.map((k) => (
+                      <td key={k} className="text-right">
+                        {b.label === "기본" ? (b.stats[k] ?? "–") : `+${b.stats[k] ?? 0}`}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr className="border-t border-zinc-300 font-semibold dark:border-zinc-700">
+                  <td className="py-0.5">최종</td>
+                  {statKeys.map((k) => (
+                    <td key={k} className="text-right">
+                      {r.stats[k] ?? "–"}
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          ))}
+        </div>
+      </details>
     </section>
   );
 }

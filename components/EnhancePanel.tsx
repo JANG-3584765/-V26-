@@ -1,6 +1,6 @@
 import { ROW_HEIGHT } from "./CardForm";
 import { BONUS_TABLE, canAwaken, maxAwaken, maxEnhance } from "@/lib/bonusTable";
-import { CORE_STAT_KEYS, type CardInput, type Role } from "@/lib/types";
+import { CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
   role: Role;
@@ -11,11 +11,12 @@ interface Props {
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm disabled:opacity-40 dark:border-zinc-700`;
 const range = (n: number) => Array.from({ length: n + 1 }, (_, i) => i);
 
-// 강화·각성으로 핵심 스탯이 얼마나 오르는지
-function coreBonus(role: Role, card: CardInput) {
+// 강화·각성으로 스탯 하나가 얼마나 오르는지: "+29 (24+5)"처럼 강화와 각성을 나눠 보여준다
+function statBonus(role: Role, card: CardInput, key: StatKey) {
   const { enhance, awaken } = BONUS_TABLE.cardType[role][card.type];
-  const add = [enhance[card.enhanceLevel], awaken?.[card.awakenLevel] ?? {}];
-  return CORE_STAT_KEYS[role].reduce((sum, k) => sum + add.reduce((s, b) => s + (b[k] ?? 0), 0), 0);
+  const e = enhance[card.enhanceLevel]?.[key] ?? 0;
+  const a = awaken?.[card.awakenLevel]?.[key] ?? 0;
+  return a ? `+${e + a} (${e}+${a})` : `+${e}`;
 }
 
 export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
@@ -29,7 +30,7 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
 
       <div className="mt-3 flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-          {["", "강화", "각성", "핵심"].map((label, i) => (
+          {["", "강화", "각성", ...CORE_STAT_KEYS[role]].map((label, i) => (
             <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
               {label}
             </span>
@@ -73,7 +74,11 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
                   ))
                 )}
               </select>
-              <span className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500`}>+{coreBonus(role, card)}</span>
+              {CORE_STAT_KEYS[role].map((key) => (
+                <span key={key} className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500 tabular-nums`}>
+                  {statBonus(role, card, key)}
+                </span>
+              ))}
             </div>
           );
         })}

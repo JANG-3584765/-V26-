@@ -44,15 +44,26 @@ export default function SetDeckPanel({ role, cards, onCardsChange, cond, onCondC
         연도 효과 일괄 적용 <span className="text-xs text-zinc-500">(카드별로는 위 &lsquo;연도&rsquo; 칸에서)</span>
       </label>
 
+      {/* 카드별로 세트덱이 스탯마다 얼마나 올렸는지 */}
       <div className="mt-3 flex gap-1.5">
-        <span className={`${ROW_HEIGHT} flex w-10 shrink-0 items-center text-xs text-zinc-500`}>핵심</span>
+        <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
+          {["", ...CORE_STAT_KEYS[role]].map((label, i) => (
+            <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
+              {label}
+            </span>
+          ))}
+        </div>
         {cards.map((card, i) => {
           const bonus = setDeckBonus(role, card, cond);
-          const core = CORE_STAT_KEYS[role].reduce((s, k) => s + (bonus[k] ?? 0), 0);
           return (
-            <span key={i} className={`${ROW_HEIGHT} min-w-0 flex-1 truncate text-center text-sm leading-9 text-zinc-500`}>
-              {card.name} +{core}
-            </span>
+            <div key={i} className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span className={`${ROW_HEIGHT} truncate text-center text-sm leading-9`}>{card.name}</span>
+              {CORE_STAT_KEYS[role].map((key) => (
+                <span key={key} className={`${ROW_HEIGHT} text-center text-sm leading-9 text-zinc-500 tabular-nums`}>
+                  +{bonus[key] ?? 0}
+                </span>
+              ))}
+            </div>
           );
         })}
       </div>

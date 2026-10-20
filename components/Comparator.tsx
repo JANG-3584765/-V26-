@@ -107,7 +107,7 @@ export default function Comparator() {
 
       <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
 
-      <ResultTable role={role} rows={rows} />
+      <ResultTable role={role} rows={rows} cond={cond} />
 
       <ShareButton />
     </div>
