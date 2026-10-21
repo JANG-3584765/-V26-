@@ -4,7 +4,7 @@ import { decodeShare, encodeShare, type ShareState } from "./share";
 
 const state: ShareState = {
   role: "batter",
-  cond: { ...DEFAULT_CONDITION, redistTargetPct: 30, applySpecial: false, setDeckScore: 150, yearMatchAll: false, setDeckPicks: DEFAULT_CONDITION.setDeckPicks.map((p, i) => (i === 1 ? 1 : p)) },
+  cond: { ...DEFAULT_CONDITION, redistTargetPct: 30, setDeckScore: 150, yearMatchAll: false, setDeckPicks: DEFAULT_CONDITION.setDeckPicks.map((p, i) => (i === 1 ? 1 : p)) },
   cards: [
     { name: "김도영 시그", type: "시그니처", base: { 파워: 80, 정확: 75, 선구: 70 }, enhanceLevel: 10, awakenLevel: 9 },
     {
@@ -14,8 +14,7 @@ const state: ShareState = {
       enhanceLevel: 7,
       awakenLevel: 0,
       customTraining: { 파워: 20, 정확: 10, 선구: 4 },
-      customSpecial: 6,
-      specialFA: true,
+      special: { 파워: 3, 정확: 2, 선구: 1 },
       potm: true,
       yearMatch: true,
       lineup: "top",
@@ -33,8 +32,7 @@ describe("encodeShare / decodeShare", () => {
         {
           ...state.cards[0],
           customTraining: undefined,
-          customSpecial: undefined,
-          specialFA: undefined,
+          special: undefined,
           potm: undefined,
           yearMatch: undefined,
           lineup: undefined,
@@ -57,7 +55,7 @@ describe("encodeShare / decodeShare", () => {
   });
 
   // 링크는 누구나 고칠 수 있으므로 범위를 벗어난 값은 받지 않는다
-  type Raw = { c: { pk: string; ds: number }; k: { t: number; b: number[]; e: number; a: number; fa?: number; po?: number; pl?: number }[] };
+  type Raw = { c: { pk: string; ds: number }; k: { t: number; b: number[]; e: number; a: number; po?: number; pl?: number; sl?: number[] }[] };
   const tamper = (fn: (p: Raw) => void) => {
     const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodeShare(state).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0))));
     fn(json);
@@ -75,10 +73,6 @@ describe("encodeShare / decodeShare", () => {
     expect(tamper((p) => (p.c.ds = 999))).toBeNull(); // 세트덱 스코어 범위 밖
     expect(tamper((p) => (p.k[1].po = 20))).toBeNull(); // 없는 포지션
     expect(tamper((p) => (p.k[1].pl = 21))).toBeNull(); // 포지션 특훈 21단계
-  });
-
-  it("FA가 안 되는 카드의 FA 표시는 무시한다", () => {
-    const r = tamper((p) => ((p.k[0].t = 4), (p.k[0].a = 0), (p.k[0].fa = 1))); // 골든글러브
-    expect(r?.cards[0].specialFA).toBeUndefined();
+    expect(tamper((p) => (p.k[1].sl = [1, 2]))).toBeNull(); // 특훈 값 개수가 핵심 스탯 수와 다름
   });
 });

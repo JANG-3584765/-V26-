@@ -27,7 +27,7 @@ describe("이달의 선수", () => {
   });
 
   it("최종 핵심 합계에 반영된다: 시그 타자 +2 × 3 = +6", () => {
-    const only = { ...DEFAULT_CONDITION, setDeckScore: 0, applyTraining: false, applySpecial: false };
+    const only = { ...DEFAULT_CONDITION, setDeckScore: 0, applyTraining: false };
     expect(compareCards("batter", [card("시그니처")], only)[0].core).toBe(216);
   });
 });

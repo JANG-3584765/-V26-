@@ -1,9 +1,18 @@
 import { valueAtProb, type RedistTable } from "./training";
-import type { CardType } from "./types";
+import { CORE_STAT_KEYS, type CardType, type Role } from "./types";
 
-// 특훈(포지션 특훈과 별개): 6개 스탯 중 하나를 골라 올린다. 결과 등급에 따라
-// GOOD +2 / GREAT +3 / PERFECT +4 — 고른 스탯에 +1, 나머지(1~3)는 6개 스탯에 무작위(중복 가능).
-// 결과는 무제한 재설정할 수 있어서, 훈련 재분배처럼 "재설정 1회에 이 값 이상 나올 확률" 표로 기준을 잡는다.
+// 특훈(포지션 특훈과 별개): 특훈 1회마다 고른 스탯에 +1, 그리고 "추가 능력치 개수"만큼
+// 6개 스탯 중 하나에 각각 +1이 붙는다 (스탯마다 1/6, 독립 시행, 중복 가능).
+// 공식 확률 (게임 공지):
+//   추가 개수   임팩트(FA 포함)   시즌·국가대표·시그니처(FA 포함)·골든글러브
+//   +1 GOOD       50%               33.34%
+//   +2 GREAT      50%               33.33%
+//   +3 PERFECT     -                33.33%
+// 재훈련은 같은 확률로 다시 정하고, 재훈련권을 쓰면 추가 개수가 고정된다 (임팩트 +2, 나머지 +3).
+// 커뮤니티 재설정표 5종을 이 규칙으로 재현한다 (special.test.ts).
+//
+// ※ 지금 화면에서는 쓰지 않는다. 특훈은 사용자가 게임에서 본 값을 스탯별로 직접 입력한다 (compare.ts cardSpecial).
+//   재훈련 확률·기대 횟수 기능을 다시 쓰게 되면 여기서 가져다 쓴다.
 
 // 카드별 특훈 횟수
 export const SPECIAL_COUNT: Record<CardType, number> = {
@@ -16,57 +25,74 @@ export const SPECIAL_COUNT: Record<CardType, number> = {
   시즌: 3,
 };
 
-// 커뮤니티 재설정표: 무작위 추가분 중 파정(타자 파워·정확) / 변구(투수 변화·구위)에 들어간 합이
-// from + i 이상일 확률(%). GOOD·GREAT·PERFECT 확률은 공개되지 않아 모델로 계산하지 않고 표를 그대로 쓴다.
-// 타자는 표가 선구를 세지 않아서 선구에 들어간 특훈 포인트만큼 낮게 잡힌다.
-const IMPACT: RedistTable = { from: 0, probs: [100, 82.85, 46.85, 16.5, 3.807, 0.48, 0.023] }; // 3회, 회당 추가 최대 2
-const SIG_GG: RedistTable = { from: 0, probs: [100, 89.67, 62.77, 31.63, 10.99, 2.706, 0.497, 0.0623, 0.0105, 0.0014] };
-const NATIONAL: RedistTable = {
-  from: 0,
-  probs: [100, 95.15, 78.3, 51.11, 25.82, 10.33, 3.3172, 0.9359, 0.2634, 0.1217, 0.0175, 0.0024, 0.0002],
-};
-
-// 올스타·시즌은 표가 없어 같은 3회·PERFECT까지 나오는 시그/골글 표를 쓴다 (가정)
-export const SPECIAL_TABLE: Record<CardType, RedistTable | null> = {
-  라이브: null,
-  국가대표: NATIONAL,
-  임팩트: IMPACT,
-  시그니처: SIG_GG,
-  골든글러브: SIG_GG,
-  "라이브 올스타": SIG_GG,
-  시즌: SIG_GG,
-};
-
-// FA: 필요할 때 추가로 하는 특훈, 5회 (표 최댓값과도 맞음: 임팩트 10 = 5×2, 시그니처 15 = 5×3).
-// FA 재설정표가 있는 카드만 고를 수 있다.
+// FA: 필요할 때 추가로 하는 특훈 5회. 임팩트·시그니처만 할 수 있다.
 export const FA_COUNT = 5;
-export const FA_TABLE: Partial<Record<CardType, RedistTable>> = {
-  임팩트: {
-    from: 0,
-    probs: [100, 94.71, 76.19, 47.58, 22.45, 8.163, 2.359, 0.641, 0.233, 0.159, 0.15],
-  },
-  시그니처: {
-    from: 0,
-    probs: [
-      100, 97.72, 87.85, 67.72, 43.14, 23.13, 10.91, 4.743, 2.214, 1.0, 0.448, 0.149, 0.043, 0.00841504, 0.00127723,
-      0.00002868,
-    ],
-  },
+export const canFA = (type: CardType) => type === "임팩트" || type === "시그니처";
+
+// [추가 개수, 확률]
+type ExtraDist = [number, number][];
+const IMPACT_EXTRA: ExtraDist = [
+  [1, 0.5],
+  [2, 0.5],
+];
+const OTHER_EXTRA: ExtraDist = [
+  [1, 0.3334],
+  [2, 0.3333],
+  [3, 0.3333],
+];
+const extraDist = (type: CardType, ticket: boolean): ExtraDist => {
+  const impact = type === "임팩트";
+  if (ticket) return [[impact ? 2 : 3, 1]];
+  return impact ? IMPACT_EXTRA : OTHER_EXTRA;
 };
 
-export const canFA = (type: CardType) => FA_TABLE[type] !== undefined;
+const binom = (n: number, k: number, p: number) => {
+  let c = 1;
+  for (let i = 0; i < k; i++) c = (c * (n - i)) / (i + 1);
+  return c * p ** k * (1 - p) ** (n - k);
+};
+// 두 분포를 합친 분포 (합성곱)
+const convolve = (a: number[], b: number[]) => {
+  const r = new Array(a.length + b.length - 1).fill(0);
+  a.forEach((x, i) => b.forEach((y, j) => (r[i + j] += x * y)));
+  return r;
+};
 
-// 카드에 적용할 재설정표와 특훈 횟수 (FA를 켰고 가능한 카드면 FA 기준)
-export function specialSpec(type: CardType, fa = false): { table: RedistTable | null; count: number } {
-  const faTable = fa ? FA_TABLE[type] : undefined;
-  return faTable ? { table: faTable, count: FA_COUNT } : { table: SPECIAL_TABLE[type], count: SPECIAL_COUNT[type] };
+// 특훈 count회의 무작위 추가분 중 핵심 스탯에 들어간 합이 x 이상일 확률(%) 표.
+// 추가분 하나가 핵심 스탯에 들어갈 확률 q = 핵심 스탯 수 / 6 (타자 파정선 1/2, 투수 변구 1/3).
+export function specialProbs(count: number, dist: ExtraDist, q: number): number[] {
+  // 1회 분포: 핵심 스탯에 0 ~ (회당 최대 추가 개수)개가 들어갈 확률
+  const once = new Array(Math.max(...dist.map(([k]) => k)) + 1).fill(0);
+  for (const [k, w] of dist) for (let j = 0; j <= k; j++) once[j] += w * binom(k, j, q);
+  let exact = [1];
+  for (let i = 0; i < count; i++) exact = convolve(exact, once);
+  const atLeast: number[] = [];
+  let acc = 0;
+  for (let x = exact.length - 1; x >= 0; x--) {
+    acc += exact[x];
+    atLeast[x] = acc * 100;
+  }
+  return atLeast;
+}
+
+// 카드에 적용할 특훈 횟수와 확률표 (특훈 불가 카드는 table null)
+export function specialSpec(
+  role: Role,
+  type: CardType,
+  fa = false,
+  ticket = false,
+): { table: RedistTable | null; count: number } {
+  const count = fa && canFA(type) ? FA_COUNT : SPECIAL_COUNT[type];
+  if (count === 0) return { table: null, count };
+  const q = CORE_STAT_KEYS[role].length / 6;
+  return { table: { from: 0, probs: specialProbs(count, extraDist(type, ticket), q) }, count };
 }
 
 // 특훈으로 핵심 스탯에 오르는 양 = 횟수(고른 스탯 +1, 핵심을 고른다고 가정) + 무작위 추가분
-export const specialCore = (type: CardType, fa: boolean, extra: number) => specialSpec(type, fa).count + extra;
+export const specialCore = (count: number, extra: number) => count + extra;
 
 // 목표 확률 내외의 무작위 추가분 (특훈 불가 카드는 0)
-export function defaultSpecialExtra(type: CardType, fa: boolean, targetPct: number): number {
-  const { table } = specialSpec(type, fa);
+export function defaultSpecialExtra(role: Role, type: CardType, fa: boolean, ticket: boolean, targetPct: number): number {
+  const { table } = specialSpec(role, type, fa, ticket);
   return table ? valueAtProb(table, targetPct) : 0;
 }

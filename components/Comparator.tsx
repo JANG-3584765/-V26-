@@ -46,7 +46,7 @@ export default function Comparator() {
   // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 능력치만 비운다
   const changeRole = (next: Role) => {
     setRole(next);
-    setCards(cards.map((c) => ({ ...c, base: {}, customTraining: undefined, customSpecial: undefined })));
+    setCards(cards.map((c) => ({ ...c, base: {}, customTraining: undefined, special: undefined })));
   };
 
   return (
@@ -103,7 +103,7 @@ export default function Comparator() {
         onCondChange={setCond}
       />
 
-      <SpecialPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+      <SpecialPanel role={role} cards={cards} onCardsChange={setCards} />
 
       <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
 

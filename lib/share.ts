@@ -2,7 +2,6 @@ import { canAwaken, DEFAULT_CONDITION, maxAwaken, maxEnhance } from "./bonusTabl
 import { MAX_POSITION_LEVEL } from "./positionTraining";
 import { LINEUPS, MAX_SET_DECK_SCORE, PITCHER_SLOTS, POSITIONS, SET_DECK_TIERS } from "./setDeck";
 import { canPotm } from "./potm";
-import { canFA } from "./special";
 import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role, type Stats } from "./types";
 
 // 입력 상태를 URL 한 줄(?s=...)로 주고받는다. 서버 없이 링크만으로 공유하려는 용도.
@@ -22,8 +21,7 @@ interface PackedCard {
   e: number; // 강화
   a: number; // 각성
   tr?: number[]; // 직접 입력한 훈련값 (핵심 스탯 순서)
-  sp?: number; // 직접 입력한 특훈 재설정 결과
-  fa?: 1; // FA 특훈
+  sl?: number[]; // 스탯별 특훈 값 (핵심 스탯 순서)
   pm?: 1; // 이달의 선수
   y?: 0 | 1; // 연도 (카드별로 따로 정했을 때만)
   lu?: number; // 타순 (LINEUPS 순번)
@@ -34,7 +32,7 @@ interface PackedCard {
 interface Packed {
   v: 1;
   r: "b" | "p";
-  c: { at: boolean; tp: number; as: boolean; sp: number; ds: number; pk: string; ya: boolean };
+  c: { at: boolean; tp: number; ds: number; pk: string; ya: boolean };
   k: PackedCard[];
 }
 
@@ -61,8 +59,6 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
     c: {
       at: cond.applyTraining,
       tp: cond.redistTargetPct,
-      as: cond.applySpecial,
-      sp: cond.specialTargetPct,
       ds: cond.setDeckScore,
       pk: cond.setDeckPicks.join(""), // 단계별 선택을 "0110…" 한 줄로
       ya: cond.yearMatchAll,
@@ -74,8 +70,7 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       e: card.enhanceLevel,
       a: card.awakenLevel,
       ...(card.customTraining && { tr: keys.map((k) => card.customTraining![k] ?? 0) }),
-      ...(card.customSpecial !== undefined && { sp: card.customSpecial }),
-      ...(card.specialFA && { fa: 1 as const }),
+      ...(card.special && { sl: keys.map((k) => card.special![k] ?? 0) }),
       ...(card.potm && { pm: 1 as const }),
       ...(card.yearMatch !== undefined && { y: card.yearMatch ? (1 as const) : (0 as const) }),
       ...(card.lineup && { lu: LINEUPS.findIndex((l) => l.value === card.lineup) }),
@@ -113,7 +108,11 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     if (!Array.isArray(p.tr) || p.tr.length !== keys.length || !p.tr.every((v) => isInt(v, 0, MAX_STAT))) return null;
     customTraining = Object.fromEntries(keys.map((k, i) => [k, p.tr![i]]));
   }
-  if (p.sp !== undefined && !isInt(p.sp, 0, MAX_STAT)) return null;
+  let special: Stats | undefined;
+  if (p.sl !== undefined) {
+    if (!Array.isArray(p.sl) || p.sl.length !== keys.length || !p.sl.every((v) => isInt(v, 0, MAX_STAT))) return null;
+    special = Object.fromEntries(keys.map((k, i) => [k, p.sl![i]]));
+  }
   if (p.y !== undefined && p.y !== 0 && p.y !== 1) return null;
   if (p.lu !== undefined && !isInt(p.lu, 0, LINEUPS.length - 1)) return null;
   if (p.po !== undefined && !isInt(p.po, 0, POSITIONS.length - 1)) return null;
@@ -127,8 +126,7 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     enhanceLevel: p.e,
     awakenLevel: p.a,
     customTraining,
-    customSpecial: p.sp,
-    specialFA: p.fa === 1 && canFA(type) ? true : undefined,
+    special,
     potm: p.pm === 1 && canPotm(type) ? true : undefined,
     yearMatch: p.y === undefined ? undefined : p.y === 1,
     lineup: p.lu === undefined ? undefined : LINEUPS[p.lu].value,
@@ -145,16 +143,14 @@ export function decodeShare(s: string): ShareState | null {
     if (p.k.length < 1 || p.k.length > MAX_CARDS) return null;
     const role: Role = p.r === "b" ? "batter" : "pitcher";
 
-    const { at, tp, as, sp, ds, pk, ya } = p.c ?? {};
-    if (typeof at !== "boolean" || typeof as !== "boolean" || !isInt(tp, 1, 100) || !isInt(sp, 1, 100)) return null;
+    const { at, tp, ds, pk, ya } = p.c ?? {};
+    if (typeof at !== "boolean" || !isInt(tp, 1, 100)) return null;
     if (!isInt(ds, 0, MAX_SET_DECK_SCORE) || typeof ya !== "boolean") return null;
     if (typeof pk !== "string" || !new RegExp(`^[01]{${SET_DECK_TIERS.length}}$`).test(pk)) return null;
     const cond: CommonCondition = {
       ...DEFAULT_CONDITION,
       applyTraining: at,
       redistTargetPct: tp,
-      applySpecial: as,
-      specialTargetPct: sp,
       setDeckScore: ds,
       setDeckPicks: [...pk].map((ch) => (ch === "1" ? 1 : 0)),
       yearMatchAll: ya,

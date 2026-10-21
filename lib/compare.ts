@@ -3,7 +3,6 @@ import { coreScore, normalize } from "./calc";
 import { positionTrainingBonus } from "./positionTraining";
 import { potmBonus } from "./potm";
 import { setDeckBonus } from "./setDeck";
-import { defaultSpecialExtra, specialCore, specialSpec } from "./special";
 import { distribute, trainingBonus } from "./training";
 import type { CardInput, CommonCondition, Role, Stats } from "./types";
 
@@ -23,15 +22,9 @@ export function cardTraining(role: Role, card: CardInput, cond: CommonCondition)
   return distribute(role, trainingBonus(role, card.type, cond.redistTargetPct).core);
 }
 
-// 특훈 재설정 결과(파정·변구 추가분): 직접 입력한 값이 있으면 그것, 없으면 확률 기준 기본값
-export const cardSpecialExtra = (card: CardInput, cond: CommonCondition) =>
-  card.customSpecial ?? defaultSpecialExtra(card.type, !!card.specialFA, cond.specialTargetPct);
-
-// 카드에 적용할 스탯별 특훈값 (특훈 불가 카드는 없음)
-export function cardSpecial(role: Role, card: CardInput, cond: CommonCondition): Stats {
-  if (!cond.applySpecial || specialSpec(card.type, card.specialFA).count === 0) return {};
-  return distribute(role, specialCore(card.type, !!card.specialFA, cardSpecialExtra(card, cond)));
-}
+// 카드에 적용할 스탯별 특훈값: 사용자가 입력한 값 그대로 (입력하지 않으면 0).
+// 특훈 확률 모델(special.ts)은 참고용으로 남겨 두고 비교에는 쓰지 않는다.
+export const cardSpecial = (card: CardInput): Stats => card.special ?? {};
 
 export interface BreakdownRow {
   label: string;
@@ -47,7 +40,7 @@ export function breakdown(role: Role, card: CardInput, cond: CommonCondition): B
     { label: "강화", stats: enhance[card.enhanceLevel] ?? {} },
     { label: "각성", stats: awaken?.[card.awakenLevel] ?? {} },
     { label: "훈련", stats: cardTraining(role, card, cond) },
-    { label: "특훈", stats: cardSpecial(role, card, cond) },
+    { label: "특훈", stats: cardSpecial(card) },
     { label: "세트덱", stats: setDeckBonus(role, card, cond) },
     { label: "포지션 특훈", stats: positionTrainingBonus(role, card) },
     { label: "이달의 선수", stats: potmBonus(role, card) },
@@ -62,7 +55,7 @@ export function compareCards(role: Role, cards: CardInput[], cond: CommonConditi
   return cards
     .map((card, index) => {
       const training = cardTraining(role, card, cond);
-      const special = cardSpecial(role, card, cond);
+      const special = cardSpecial(card);
       const stats = normalize(role, card, cond, BONUS_TABLE);
       // 입력한 스탯에만 더한다 (빈칸은 계속 빈칸)
       for (const key of Object.keys(stats) as (keyof Stats)[]) stats[key]! += (training[key] ?? 0) + (special[key] ?? 0);

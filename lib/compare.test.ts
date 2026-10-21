@@ -13,8 +13,8 @@ const card = (name: string, over: Partial<CardInput> = {}): CardInput => ({
   ...over,
 });
 
-// 훈련만 검사하려고 특훈·세트덱은 끈다 (special.test.ts, setDeck.test.ts)
-const trainingOnly = { ...DEFAULT_CONDITION, applySpecial: false, setDeckScore: 0 };
+// 훈련만 검사하려고 세트덱은 끈다 (setDeck.test.ts). 특훈은 입력하지 않으면 0이다.
+const trainingOnly = { ...DEFAULT_CONDITION, setDeckScore: 0 };
 const noTraining = { ...trainingOnly, applyTraining: false };
 
 describe("compareCards", () => {

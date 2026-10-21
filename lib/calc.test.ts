@@ -32,7 +32,7 @@ const card = (over: Partial<CardInput> = {}): CardInput => ({
 });
 
 // 세트덱은 setDeck.test.ts에서 따로 검사한다
-const noBonus = { ...DEFAULT_CONDITION, setDeckScore: 0, lockerLevel: 0, applyTraining: false, applySpecial: false };
+const noBonus = { ...DEFAULT_CONDITION, setDeckScore: 0, lockerLevel: 0, applyTraining: false };
 
 describe("normalize", () => {
   it("보너스가 없으면 입력값 그대로", () => {
