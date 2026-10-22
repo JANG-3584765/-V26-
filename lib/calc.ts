@@ -1,5 +1,5 @@
 import type { BonusTable } from "./bonusTable";
-import { positionTrainingBonus } from "./positionTraining";
+import { positionBonus, positionTrainingBonus } from "./positionTraining";
 import { potmBonus } from "./potm";
 import { setDeckBonus } from "./setDeck";
 import {
@@ -27,6 +27,7 @@ export function normalize(
     potmBonus(role, card),
     table.locker[role][cond.lockerLevel],
     positionTrainingBonus(role, card),
+    positionBonus(card),
   ];
 
   const result: Stats = {};

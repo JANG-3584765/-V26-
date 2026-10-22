@@ -47,6 +47,7 @@ export interface CardInput {
   position?: Position;
   pitcherSlot?: PitcherSlot;
   positionLevel?: number; // 포지션 특훈 단계 (0~20)
+  positionBonus?: Stats; // 포지션 특훈 5·15단 보너스 (게임에서 본 값을 그대로 입력)
 }
 
 // 비교하는 모든 카드에 똑같이 적용되는 조건

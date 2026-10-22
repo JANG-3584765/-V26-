@@ -307,3 +307,17 @@ export function positionTrainingBonus(role: Role, card: CardInput): Stats {
   }
   return total;
 }
+
+// 5단·15단 보너스: 도달할 때마다 무작위 스탯에 +1~3이 붙고, 재화를 써서 재설정할 수 있다.
+// 보통 파워(투수 구위) +3을 노리지만 재설정 비용 때문에 타협한 값을 쓰는 경우가 많아,
+// 기본값 없이 사용자가 게임에서 본 값을 그대로 입력한다 (비워두면 0).
+export const BONUS_LEVELS = [5, 15];
+
+// 단계에서 받을 수 있는 보너스 합계 최대 (보너스 하나당 최대 3)
+export const maxPositionBonus = (level: number) => BONUS_LEVELS.filter((l) => level >= l).length * 3;
+
+// 입력한 보너스 (5단 미만이면 보너스가 없으므로 무시)
+export function positionBonus(card: CardInput): Stats {
+  const level = card.positionLevel ?? MAX_POSITION_LEVEL;
+  return maxPositionBonus(level) > 0 ? (card.positionBonus ?? {}) : {};
+}

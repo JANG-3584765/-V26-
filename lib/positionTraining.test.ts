@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CONDITION } from "./bonusTable";
-import { positionRows, positionTrainingBonus } from "./positionTraining";
+import { maxPositionBonus, positionBonus, positionRows, positionTrainingBonus } from "./positionTraining";
 import { setDeckBonus, type PitcherSlot, type Position } from "./setDeck";
 import type { CardInput, Role } from "./types";
 
@@ -81,5 +81,20 @@ describe("세트덱 선발/불펜 조건은 보직 칸에서 정해진다", () =
     expect(at("RP1") - at("SP1")).toBe(1);
     expect(at("CP")).toBe(at("RP1"));
     expect(at("SP5")).toBe(at("SP1"));
+  });
+});
+
+describe("5·15단 보너스 (직접 입력)", () => {
+  it("보너스 최대: 4단 이하 0, 5~14단 3, 15단 이상 6", () => {
+    expect([maxPositionBonus(4), maxPositionBonus(5), maxPositionBonus(14), maxPositionBonus(15), maxPositionBonus(20)]).toEqual([0, 3, 3, 6, 6]);
+  });
+
+  it("입력한 값을 그대로 쓴다 (비우면 없음)", () => {
+    expect(positionBonus(card({ positionBonus: { 파워: 3, 정확: 2 } }))).toEqual({ 파워: 3, 정확: 2 });
+    expect(positionBonus(card())).toEqual({});
+  });
+
+  it("5단 미만이면 입력값이 있어도 무시한다", () => {
+    expect(positionBonus(card({ positionLevel: 4, positionBonus: { 파워: 3 } }))).toEqual({});
   });
 });

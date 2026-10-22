@@ -1,6 +1,6 @@
 import { BONUS_TABLE } from "./bonusTable";
 import { coreScore, normalize } from "./calc";
-import { positionTrainingBonus } from "./positionTraining";
+import { positionBonus, positionTrainingBonus } from "./positionTraining";
 import { potmBonus } from "./potm";
 import { setDeckBonus } from "./setDeck";
 import { distribute, trainingBonus } from "./training";
@@ -43,6 +43,7 @@ export function breakdown(role: Role, card: CardInput, cond: CommonCondition): B
     { label: "특훈", stats: cardSpecial(card) },
     { label: "세트덱", stats: setDeckBonus(role, card, cond) },
     { label: "포지션 특훈", stats: positionTrainingBonus(role, card) },
+    { label: "포특 보너스", stats: positionBonus(card) },
     { label: "이달의 선수", stats: potmBonus(role, card) },
   ];
 }

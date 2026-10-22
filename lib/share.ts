@@ -28,6 +28,7 @@ interface PackedCard {
   po?: number; // 포지션 (POSITIONS 순번)
   pr?: number; // 투수 배치 칸 (PITCHER_SLOTS 순번)
   pl?: number; // 포지션 특훈 단계
+  pb?: number[]; // 포지션 특훈 보너스 (핵심 스탯 순서)
 }
 interface Packed {
   v: 1;
@@ -77,6 +78,7 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       ...(card.position && { po: POSITIONS.findIndex((p) => p.value === card.position) }),
       ...(card.pitcherSlot && { pr: PITCHER_SLOTS.findIndex((s) => s.value === card.pitcherSlot) }),
       ...(card.positionLevel !== undefined && { pl: card.positionLevel }),
+      ...(card.positionBonus && { pb: keys.map((k) => card.positionBonus![k] ?? 0) }),
     })),
   };
   return toBase64Url(JSON.stringify(packed));
@@ -118,6 +120,11 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
   if (p.po !== undefined && !isInt(p.po, 0, POSITIONS.length - 1)) return null;
   if (p.pr !== undefined && !isInt(p.pr, 0, PITCHER_SLOTS.length - 1)) return null;
   if (p.pl !== undefined && !isInt(p.pl, 0, MAX_POSITION_LEVEL)) return null;
+  let positionBonus: Stats | undefined;
+  if (p.pb !== undefined) {
+    if (!Array.isArray(p.pb) || p.pb.length !== keys.length || !p.pb.every((v) => isInt(v, 0, 6))) return null;
+    positionBonus = Object.fromEntries(keys.map((k, i) => [k, p.pb![i]]));
+  }
 
   return {
     name: p.n.slice(0, 20),
@@ -133,6 +140,7 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     position: p.po === undefined ? undefined : POSITIONS[p.po].value,
     pitcherSlot: p.pr === undefined ? undefined : PITCHER_SLOTS[p.pr].value,
     positionLevel: p.pl,
+    positionBonus,
   };
 }
 
