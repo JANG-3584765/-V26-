@@ -21,6 +21,7 @@ export function normalize(
 ): Stats {
   const typeBonus = table.cardType[role][card.type];
   const bonuses: (Stats | null | undefined)[] = [
+    allStats(role, BASE_BONUS),
     typeBonus.enhance[card.enhanceLevel],
     typeBonus.awaken?.[card.awakenLevel],
     setDeckBonus(role, card, cond),
@@ -38,6 +39,13 @@ export function normalize(
   }
   return result;
 }
+
+// 모든 선수에게 항상 붙는 전 능력치 보너스 (상수).
+// 출처 미확인 — 세트덱 30점 미만·다른 자리 선수에서도 +2가 붙는 것을 게임 화면 대조로 확인했다.
+export const BASE_BONUS = 2;
+
+// 모든 스탯에 같은 값을 더하는 보너스
+export const allStats = (role: Role, n: number): Stats => Object.fromEntries(STAT_KEYS[role].map((k) => [k, n]));
 
 // 필요한 스탯이 하나라도 비어 있으면 null — 일부만 더한 합계끼리 비교하면 순위가 왜곡되기 때문.
 function sum(stats: Stats, keys: readonly (keyof Stats)[]): number | null {

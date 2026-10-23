@@ -25,8 +25,8 @@ describe("compareCards", () => {
       noTraining,
     );
     expect(rows.map((r) => [r.card.name, r.core])).toEqual([
-      ["B", 220],
-      ["A", 210],
+      ["B", 226],
+      ["A", 216],
       ["빈칸", null],
     ]);
     expect(rows.map((r) => r.index)).toEqual([2, 0, 1]);
@@ -34,21 +34,21 @@ describe("compareCards", () => {
 
   it("훈련을 켜면 카드별 기본 훈련값을 스탯마다 더한다", () => {
     const cards = [card("임팩"), card("시그", { type: "시그니처" })];
-    expect(compareCards("batter", cards, noTraining).map((r) => r.core)).toEqual([210, 210]);
+    expect(compareCards("batter", cards, noTraining).map((r) => r.core)).toEqual([216, 216]);
 
     // 10% 기준 시그 타자 핵심 +47 / 임팩 타자 +34
     const on = compareCards("batter", cards, trainingOnly);
     expect(on.map((r) => [r.card.name, r.core])).toEqual([
-      ["시그", 257],
-      ["임팩", 244],
+      ["시그", 263],
+      ["임팩", 250],
     ]);
-    expect(on[0].stats).toEqual({ 파워: 97, 정확: 85, 선구: 75 }); // +17, +15, +15
+    expect(on[0].stats).toEqual({ 파워: 99, 정확: 87, 선구: 77 }); // 훈련 +17·+15·+15, 기본 보너스 +2
   });
 
   it("직접 입력한 훈련값이 있으면 기본값 대신 쓴다", () => {
     const customTraining = { 파워: 20, 정확: 20, 선구: 0 };
     const [row] = compareCards("batter", [card("내 카드", { customTraining })], trainingOnly);
-    expect(row.core).toBe(250);
+    expect(row.core).toBe(256);
   });
 });
 

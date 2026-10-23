@@ -26,8 +26,8 @@ describe("이달의 선수", () => {
     expect(potmBonus("batter", card("라이브 올스타"))).toEqual({});
   });
 
-  it("최종 핵심 합계에 반영된다: 시그 타자 +2 × 3 = +6", () => {
+  it("최종 핵심 합계에 반영된다: 시그 타자 +2 × 3 = +6 (기본 보너스 +6 포함 222)", () => {
     const only = { ...DEFAULT_CONDITION, setDeckScore: 0, applyTraining: false };
-    expect(compareCards("batter", [card("시그니처")], only)[0].core).toBe(216);
+    expect(compareCards("batter", [card("시그니처")], only)[0].core).toBe(222);
   });
 });

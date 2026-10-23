@@ -1,5 +1,5 @@
 import { BONUS_TABLE } from "./bonusTable";
-import { coreScore, normalize } from "./calc";
+import { allStats, BASE_BONUS, coreScore, normalize } from "./calc";
 import { positionBonus, positionTrainingBonus } from "./positionTraining";
 import { potmBonus } from "./potm";
 import { setDeckBonus } from "./setDeck";
@@ -37,6 +37,7 @@ export function breakdown(role: Role, card: CardInput, cond: CommonCondition): B
   const { enhance, awaken } = BONUS_TABLE.cardType[role][card.type];
   return [
     { label: "기본", stats: card.base },
+    { label: "기본 보너스", stats: allStats(role, BASE_BONUS) },
     { label: "강화", stats: enhance[card.enhanceLevel] ?? {} },
     { label: "각성", stats: awaken?.[card.awakenLevel] ?? {} },
     { label: "훈련", stats: cardTraining(role, card, cond) },

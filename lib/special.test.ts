@@ -74,11 +74,11 @@ describe("비교에 반영 (입력한 값 그대로)", () => {
   const only = { ...DEFAULT_CONDITION, applyTraining: false, setDeckScore: 0 };
 
   it("입력하지 않으면 0", () => {
-    expect(compareCards("batter", [card()], only)[0].core).toBe(210);
+    expect(compareCards("batter", [card()], only)[0].core).toBe(216);
   });
 
   it("스탯별 입력값을 그대로 더한다", () => {
     const [row] = compareCards("batter", [card({ special: { 파워: 4, 정확: 3, 선구: 2 } })], only);
-    expect(row.stats).toEqual({ 파워: 84, 정확: 73, 선구: 62 });
+    expect(row.stats).toEqual({ 파워: 86, 정확: 75, 선구: 64 }); // 기본 보너스 +2 포함
   });
 });
