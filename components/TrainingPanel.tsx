@@ -135,7 +135,7 @@ export default function TrainingPanel({ role, cards, onCardsChange, cond, onCond
 function RedistTables({ role, items }: { role: Role; items: { card: CardInput; coreSum: number; prob: CoreProb }[] }) {
   return (
     <div className="mt-3 rounded-lg bg-zinc-100 p-3 text-xs dark:bg-zinc-900">
-      <p className="font-medium">재분배 1회에 {role === "batter" ? "파정선" : "구변"} 합이 그 값 이상 나올 확률</p>
+      <p className="font-medium">재분배 1회에 {role === "batter" ? "파워·정확·선구" : "변화·구위"} 합이 그 값 이상 나올 확률</p>
       <div className="mt-2 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map(({ card, coreSum, prob }, i) => (
           <table key={i} className="w-full tabular-nums">

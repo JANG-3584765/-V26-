@@ -109,7 +109,7 @@ export const SET_DECK_TIERS: Tier[] = [
   // 오버롤 65 이상 카드만 받지만, 비교할 만한 카드는 사실상 모두 해당해 조건 없이 적용한다
   { score: 80, rec: 0, options: [{ label: "오버롤 65↑ 타자 +1", effect: batter(1) }, { label: "오버롤 65↑ 투수 +1", effect: pitcher(1) }] },
   { score: 85, rec: 0, options: [
-    { label: "4성 (타자 파정선 / 투수 구위·제구·변화 +2)", when: fourStar, effect: { batter: { 파워: 2, 정확: 2, 선구: 2 }, pitcher: { 구위: 2, 제구: 2, 변화: 2 } } },
+    { label: "4성 (타자 파워·정확·선구 / 투수 구위·제구·변화 +2)", when: fourStar, effect: { batter: { 파워: 2, 정확: 2, 선구: 2 }, pitcher: { 구위: 2, 제구: 2, 변화: 2 } } },
     { label: "5성 (파워 / 구위 +1)", when: fiveStar, effect: { batter: { 파워: 1 }, pitcher: { 구위: 1 } } },
   ] },
   { score: 90, rec: 0, options: [{ label: "선택팀 +2", effect: all(2) }, { label: "스페셜 +2", when: special, effect: all(2) }] },
@@ -133,7 +133,7 @@ export const SET_DECK_TIERS: Tier[] = [
     { label: "선발 +1", when: (c) => c.starter, effect: pitcher(1) },
   ] },
   { score: 125, rec: 0, options: [
-    { label: "4성 (타자 정확·선구·인내 / 투수 구속·변화·구위 +2)", when: fourStar, effect: { batter: { 정확: 2, 선구: 2, 인내: 2 }, pitcher: { 구속: 2, 변화: 2, 구위: 2 } } },
+    { label: "4성 (타자 정확·선구·인내 / 투수 구속·변화·제구 +2)", when: fourStar, effect: { batter: { 정확: 2, 선구: 2, 인내: 2 }, pitcher: { 구속: 2, 변화: 2, 제구: 2 } } },
     { label: "5성 (타자 인내 / 투수 제구 +1)", when: fiveStar, effect: { batter: { 인내: 1 }, pitcher: { 제구: 1 } } },
   ] },
   { score: 130, rec: 1, options: [{ label: "시즌·라이브·올스타 +1", when: regular, effect: all(1) }, { label: "스페셜 +1", when: special, effect: all(1) }] },
@@ -154,10 +154,7 @@ export const SET_DECK_TIERS: Tier[] = [
     { label: "상위타선 파워·선구·인내 +2", when: (c) => c.lineup === "top", effect: batter({ 파워: 2, 선구: 2, 인내: 2 }) },
     { label: "선발 구속·변화·수비 +1", when: (c) => c.starter, effect: pitcher({ 구속: 1, 변화: 1, 수비: 1 }) },
   ] },
-  { score: 160, rec: 0, options: [
-    { label: "타자 정확·주루·수비 +1", effect: batter({ 정확: 1, 주루: 1, 수비: 1 }) },
-    { label: "투수 구속·변화·수비 +1", effect: pitcher({ 구속: 1, 변화: 1, 수비: 1 }) },
-  ] },
+  { score: 160, rec: 0, options: [{ label: "타자 +1", effect: batter(1) }, { label: "투수 +1", effect: pitcher(1) }] },
   { score: 165, rec: 1, options: [
     { label: "타자 정확·주루·수비 +1", effect: batter({ 정확: 1, 주루: 1, 수비: 1 }) },
     { label: "투수 구속·변화·수비 +1", effect: pitcher({ 구속: 1, 변화: 1, 수비: 1 }) },
@@ -167,7 +164,7 @@ export const SET_DECK_TIERS: Tier[] = [
     { label: "타자 파워·선구·인내 +1", effect: batter({ 파워: 1, 선구: 1, 인내: 1 }) },
     { label: "투수 제구·구위·지구력 +1", effect: pitcher({ 제구: 1, 구위: 1, 지구력: 1 }) },
   ] },
-  { score: 180, rec: 1, options: [{ label: "라이브·올스타 +2", when: is("라이브", "라이브 올스타"), effect: all(2) }, { label: "연도타자 +1", when: year, effect: batter(1) }] },
+  { score: 180, rec: 1, options: [{ label: "라이브·올스타 +2", when: is("라이브", "라이브 올스타"), effect: all(2) }, { label: "연도 선수 +1", when: year, effect: all(1) }] },
   { score: 185, rec: 1, options: [
     { label: "상위타선 파워·주루 +2", when: (c) => c.lineup === "top", effect: batter({ 파워: 2, 주루: 2 }) },
     { label: "연도타자 +1", when: year, effect: batter(1) },

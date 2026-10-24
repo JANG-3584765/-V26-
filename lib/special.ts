@@ -59,7 +59,7 @@ const convolve = (a: number[], b: number[]) => {
 };
 
 // 특훈 count회의 무작위 추가분 중 핵심 스탯에 들어간 합이 x 이상일 확률(%) 표.
-// 추가분 하나가 핵심 스탯에 들어갈 확률 q = 핵심 스탯 수 / 6 (타자 파정선 1/2, 투수 변구 1/3).
+// 추가분 하나가 핵심 스탯에 들어갈 확률 q = 핵심 스탯 수 / 6 (타자 파워·정확·선구 1/2, 투수 변화·구위 1/3).
 export function specialProbs(count: number, dist: ExtraDist, q: number): number[] {
   // 1회 분포: 핵심 스탯에 0 ~ (회당 최대 추가 개수)개가 들어갈 확률
   const once = new Array(Math.max(...dist.map(([k]) => k)) + 1).fill(0);

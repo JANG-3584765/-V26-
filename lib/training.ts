@@ -14,7 +14,7 @@ export const TRAINING_MAX_LEVEL: Record<CardType, number> = {
 // 훈련 1레벨마다 6개 스탯 중 무작위로 총 3이 오른다 (중복 가능). 재분배해도 총량은 같다.
 export const POINTS_PER_LEVEL = 3;
 
-// 훈련 재분배 1회에서 핵심 스탯(타자 파정선, 투수 구변)으로 간 훈련 포인트 합이
+// 훈련 재분배 1회에서 핵심 스탯(타자 파워·정확·선구, 투수 변화·구위)으로 간 훈련 포인트 합이
 // from + i 이상 나올 확률(%) = probs[i].
 // 커뮤니티에 공유된 확률표를 옮겼고, 표가 없던 카드는 같은 규칙의 확률 모델(redistModel.ts)로 계산해 채웠다.
 export interface RedistTable {
