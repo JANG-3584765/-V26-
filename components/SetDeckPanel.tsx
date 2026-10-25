@@ -1,4 +1,5 @@
 import { ROW_HEIGHT } from "./CardForm";
+import Panel from "./Panel";
 import { MAX_SET_DECK_SCORE, SET_DECK_TIERS, setDeckBonus } from "@/lib/setDeck";
 import { CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role } from "@/lib/types";
 
@@ -23,9 +24,22 @@ export default function SetDeckPanel({ role, cards, onCardsChange, cond, onCondC
   };
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="font-medium">세트덱</h2>
+    <Panel
+      title="세트덱"
+      info={
+        <>
+          <p>단계별 기본 선택은 커뮤니티 가이드의 추천(★)이에요. 선택팀 소속은 항상 만족한다고 봐요.</p>
+          <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2">
+            <dt className="font-medium">스페셜</dt>
+            <dd>임팩·국대·시그·골글, 이달의 선수 라이브</dd>
+            <dt className="font-medium">시즌·라이브·올스타</dt>
+            <dd>스페셜이 아닌 카드</dd>
+            <dt className="font-medium">4성 / 5성</dt>
+            <dd>4성은 임팩트, 나머지는 5성</dd>
+          </dl>
+        </>
+      }
+      actions={
         <select
           className="rounded-md border border-zinc-300 bg-background px-2 py-1 text-sm dark:border-zinc-700"
           value={cond.setDeckScore}
@@ -38,10 +52,11 @@ export default function SetDeckPanel({ role, cards, onCardsChange, cond, onCondC
             </option>
           ))}
         </select>
-      </div>
-      <label className="mt-3 flex items-center gap-2 text-sm">
+      }
+    >
+      <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={cond.yearMatchAll} onChange={(e) => setYearAll(e.target.checked)} />
-        연도 효과 일괄 적용 <span className="text-xs text-zinc-500">(카드별로는 위 &lsquo;연도&rsquo; 칸에서)</span>
+        연도 효과 일괄 적용 <span className="text-xs text-zinc-500">(카드별: 카드 탭)</span>
       </label>
 
       {/* 카드별로 세트덱이 스탯마다 얼마나 올렸는지 */}
@@ -70,9 +85,6 @@ export default function SetDeckPanel({ role, cards, onCardsChange, cond, onCondC
 
       <details className="mt-3">
         <summary className="cursor-pointer text-sm font-medium">단계별 선택</summary>
-        <p className="mt-2 text-xs leading-5 text-zinc-500">
-          기본은 커뮤니티 가이드의 추천(★) 선택입니다. 선택팀 소속은 항상 만족한다고 봅니다.
-        </p>
         <ol className="mt-2 space-y-1.5">
           {SET_DECK_TIERS.map((tier, i) => {
             const open = tier.score <= cond.setDeckScore;
@@ -95,6 +107,6 @@ export default function SetDeckPanel({ role, cards, onCardsChange, cond, onCondC
           })}
         </ol>
       </details>
-    </section>
+    </Panel>
   );
 }

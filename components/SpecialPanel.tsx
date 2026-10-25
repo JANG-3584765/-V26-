@@ -1,4 +1,5 @@
 import { ROW_HEIGHT } from "./CardForm";
+import Panel from "./Panel";
 import { CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
@@ -24,11 +25,9 @@ export default function SpecialPanel({ role, cards, onCardsChange }: Props) {
     );
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="font-medium">특훈</h2>
-      <p className="mt-1 text-xs text-zinc-500">게임 화면의 스탯별 특훈 값을 그대로 넣으세요. 비워두면 0입니다.</p>
+    <Panel title="특훈" info="게임 화면의 스탯별 특훈 값을 그대로 넣어요. 비워두면 0이에요.">
 
-      <div className="mt-3 flex gap-1.5">
+      <div className="flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
           {["", ...keys].map((label, i) => (
             <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
@@ -53,6 +52,6 @@ export default function SpecialPanel({ role, cards, onCardsChange }: Props) {
           </div>
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }

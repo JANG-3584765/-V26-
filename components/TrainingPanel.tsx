@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ROW_HEIGHT, SHORT_NAME } from "./CardForm";
+import Panel from "./Panel";
 import Segmented from "./Segmented";
 import { cardTraining } from "@/lib/compare";
 import { probOfCore, trainingBonus, type CoreProb } from "@/lib/training";
@@ -43,32 +44,32 @@ export default function TrainingPanel({ role, cards, onCardsChange, cond, onCond
   });
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 font-medium">
-          <input
-            type="checkbox"
-            checked={cond.applyTraining}
-            onChange={(e) => onCondChange({ ...cond, applyTraining: e.target.checked })}
-          />
-          훈련 적용 (최대 레벨)
-        </label>
-        {cond.applyTraining && (
-          <button
-            type="button"
-            onClick={() => setShowTable(!showTable)}
-            aria-expanded={showTable}
-            aria-label="훈련 재분배 확률표 보기"
-            className="size-7 rounded-full border border-zinc-300 text-sm text-zinc-500 dark:border-zinc-700"
-          >
-            ?
-          </button>
-        )}
-      </div>
-
+    <Panel
+      title="훈련"
+      info={
+        <>
+          최대 레벨 훈련 기준이에요. 가진 카드는 실제 훈련 값을 넣으세요(진한 테두리). 비워둔 카드는 위에서 고른 확률 내외의 기댓값을 써요.
+          <br />
+          확률: 재분배 1회에 그 합 이상이 나올 확률 · 기대: 평균 재분배 횟수
+        </>
+      }
+      actions={
+        <div className="flex items-center gap-2 text-sm">
+          {cond.applyTraining && (
+            <button type="button" onClick={() => setShowTable(!showTable)} aria-expanded={showTable} className="text-xs text-zinc-500 underline">
+              확률표
+            </button>
+          )}
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={cond.applyTraining} onChange={(e) => onCondChange({ ...cond, applyTraining: e.target.checked })} />
+            적용
+          </label>
+        </div>
+      }
+    >
       {cond.applyTraining && (
         <>
-          <p className="mt-3 text-sm text-zinc-500">기본값: 재분배 결과가 이 확률 내외일 때</p>
+          <p className="text-xs text-zinc-500">기댓값 기준 (재분배 결과가 이 확률 내외)</p>
           <div className="mt-1">
             <Segmented
               options={TARGET_OPTIONS.map((pct) => ({ value: pct, label: `${pct}%` }))}
@@ -119,15 +120,11 @@ export default function TrainingPanel({ role, cards, onCardsChange, cond, onCond
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs leading-5 text-zinc-500">
-            가진 카드는 실제 훈련 수치로 고쳐 넣으세요 (진한 테두리). 확률은 재분배 1회에 그 합 이상이 나올 확률,
-            기대는 평균 재분배 횟수입니다.
-          </p>
 
           {showTable && <RedistTables role={role} items={items} />}
         </>
       )}
-    </section>
+    </Panel>
   );
 }
 

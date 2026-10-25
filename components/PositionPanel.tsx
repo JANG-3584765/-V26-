@@ -1,4 +1,5 @@
 import { ROW_HEIGHT } from "./CardForm";
+import Panel from "./Panel";
 import { MAX_POSITION_LEVEL, maxPositionBonus, positionTrainingBonus } from "@/lib/positionTraining";
 import { CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
 
@@ -23,13 +24,12 @@ export default function PositionPanel({ role, cards, onCardsChange }: Props) {
   };
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="font-medium">포지션 특훈</h2>
-      <p className="mt-1 text-xs leading-5 text-zinc-500">
-        단계는 카드의 포지션(투수는 보직) 표로 계산합니다. 5·15단 보너스는 게임 화면 값을 그대로 넣으세요. 비워두면 0입니다.
-      </p>
+    <Panel
+      title="포지션 특훈"
+      info="단계 값은 카드의 포지션(투수는 보직) 표로 자동 계산해요. 각 줄 왼쪽 숫자가 단계 값, 칸은 5·15단 보너스예요. 보너스는 게임 화면 값을 그대로 넣고, 비워두면 0이에요. 보너스 최대: 5~14단 3, 15단 이상 6."
+    >
 
-      <div className="mt-3 flex gap-1.5">
+      <div className="flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
           {["", "단계", ...keys.map((k) => `${k}`), "보너스"].map((label, i) => (
             <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
@@ -79,7 +79,6 @@ export default function PositionPanel({ role, cards, onCardsChange }: Props) {
           );
         })}
       </div>
-      <p className="mt-2 text-xs text-zinc-500">각 줄 왼쪽 숫자는 단계 표로 오른 값, 칸은 보너스입니다. 보너스 최대: 5~14단 3, 15단 이상 6.</p>
-    </section>
+    </Panel>
   );
 }

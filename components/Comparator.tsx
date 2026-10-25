@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
 import EnhancePanel from "./EnhancePanel";
+import Panel from "./Panel";
 import PositionPanel from "./PositionPanel";
 import ResultTable from "./ResultTable";
 import SetDeckPanel from "./SetDeckPanel";
@@ -19,6 +20,17 @@ import { CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role } from 
 
 const MIN_CARDS = 2;
 const MAX_CARDS = 3;
+
+// 입력 칸을 탭으로 나눠 한 번에 하나만 보여준다 (결과표는 항상 아래에)
+const TABS = [
+  { value: "card", label: "카드" },
+  { value: "enhance", label: "강화" },
+  { value: "training", label: "훈련" },
+  { value: "special", label: "특훈" },
+  { value: "position", label: "포특" },
+  { value: "setdeck", label: "세트덱" },
+] as const;
+type Tab = (typeof TABS)[number]["value"];
 
 const newCard = (n: number): CardInput => ({
   name: `카드 ${n}`,
@@ -35,6 +47,7 @@ export default function Comparator() {
   const [role, setRole] = useState<Role>(shared?.role ?? "batter");
   const [cards, setCards] = useState<CardInput[]>(() => shared?.cards ?? [newCard(1), newCard(2)]);
   const [cond, setCond] = useState<CommonCondition>(shared?.cond ?? DEFAULT_CONDITION);
+  const [tab, setTab] = useState<Tab>("card");
 
   // 입력이 바뀌면 주소창 링크도 바꿔 둔다 (새로고침·공유해도 그대로). 브라우저 주소(외부 시스템)를 맞추는 일이라 effect가 맞는 자리다.
   useEffect(() => {
@@ -52,63 +65,62 @@ export default function Comparator() {
 
   return (
     <div className="space-y-4">
-      <Segmented
-        options={[
-          { value: "batter", label: "타자" },
-          { value: "pitcher", label: "투수" },
-        ]}
-        value={role}
-        onChange={changeRole}
-      />
+      {/* 스크롤해도 위에 붙어 있는 조작 줄: 타자/투수, 탭 */}
+      <div className="sticky top-0 z-10 -mx-4 space-y-2 border-b border-zinc-200 bg-background px-4 py-2 dark:border-zinc-800">
+        <Segmented
+          options={[
+            { value: "batter", label: "타자" },
+            { value: "pitcher", label: "투수" },
+          ]}
+          value={role}
+          onChange={changeRole}
+        />
+        <Segmented options={TABS} value={tab} onChange={setTab} />
+      </div>
 
-      <section className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-        <p className="mb-3 text-xs text-zinc-500">훈련·강화·각성 전 능력치를 입력하세요</p>
-        <div className="flex gap-1.5">
-          {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
-          <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
-            {["이름", "종류", ...(role === "batter" ? ["타순", "포지션"] : ["보직"]), "연도", "이달", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
-              <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
-                {label}
-              </span>
+      {tab === "card" && (
+        <Panel title="카드" info="훈련·강화·각성 전 기본 능력치를 넣어요. 타순·포지션(투수는 보직)은 세트덱·포지션 특훈 계산에, 연도·이달은 세트덱·이달의 선수 계산에 쓰여요.">
+          <div className="flex gap-1.5">
+            {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
+            <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
+              {["이름", "종류", ...(role === "batter" ? ["타순", "포지션"] : ["보직"]), "연도", "이달", "훈련", ...CORE_STAT_KEYS[role]].map((label) => (
+                <span key={label} className={`${ROW_HEIGHT} flex items-center`}>
+                  {label}
+                </span>
+              ))}
+            </div>
+            {cards.map((card, i) => (
+              <CardForm
+                key={i}
+                role={role}
+                card={card}
+                yearMatchAll={cond.yearMatchAll}
+                onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
+                onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
+              />
             ))}
           </div>
-          {cards.map((card, i) => (
-            <CardForm
-              key={i}
-              role={role}
-              card={card}
-              yearMatchAll={cond.yearMatchAll}
-              onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
-              onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
-            />
-          ))}
-        </div>
-      </section>
-      {cards.length < MAX_CARDS && (
-        <button
-          type="button"
-          onClick={() => setCards([...cards, newCard(cards.length + 1)])}
-          className="w-full rounded-xl border border-dashed border-zinc-300 py-3 text-sm text-zinc-500 dark:border-zinc-700"
-        >
-          + 카드 추가
-        </button>
+          {cards.length < MAX_CARDS && (
+            <button
+              type="button"
+              onClick={() => setCards([...cards, newCard(cards.length + 1)])}
+              className="mt-3 w-full rounded-xl border border-dashed border-zinc-300 py-2.5 text-sm text-zinc-500 dark:border-zinc-700"
+            >
+              + 카드 추가
+            </button>
+          )}
+        </Panel>
       )}
 
-      <EnhancePanel role={role} cards={cards} onCardsChange={setCards} />
-
-      <TrainingPanel
-        role={role}
-        cards={cards}
-        onCardsChange={setCards}
-        cond={cond}
-        onCondChange={setCond}
-      />
-
-      <SpecialPanel role={role} cards={cards} onCardsChange={setCards} />
-
-      <PositionPanel role={role} cards={cards} onCardsChange={setCards} />
-
-      <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+      {tab === "enhance" && <EnhancePanel role={role} cards={cards} onCardsChange={setCards} />}
+      {tab === "training" && (
+        <TrainingPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+      )}
+      {tab === "special" && <SpecialPanel role={role} cards={cards} onCardsChange={setCards} />}
+      {tab === "position" && <PositionPanel role={role} cards={cards} onCardsChange={setCards} />}
+      {tab === "setdeck" && (
+        <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+      )}
 
       <ResultTable role={role} rows={rows} cond={cond} />
 

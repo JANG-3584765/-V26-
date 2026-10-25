@@ -1,4 +1,5 @@
 import { ROW_HEIGHT, SHORT_NAME } from "./CardForm";
+import Panel from "./Panel";
 import { breakdown, type ResultRow } from "@/lib/compare";
 import { CORE_STAT_KEYS, type CommonCondition, type Role } from "@/lib/types";
 
@@ -31,11 +32,12 @@ export default function ResultTable({ role, rows, cond }: Props) {
   const statKeys = CORE_STAT_KEYS[role];
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="font-medium">비교 결과</h2>
-      <p className="mt-1 text-xs text-zinc-500">강화·각성·훈련·특훈·세트덱까지 반영한 최종 능력치 · 줄마다 가장 높은 값을 강조합니다</p>
+    <Panel
+      title="비교 결과"
+      info={`모든 요소를 반영한 최종 능력치예요. 줄마다 가장 높은 값을 강조하고, 나머지는 차이를 보여줘요. 핵심: ${role === "batter" ? "파워+정확+선구" : "변화+구위"}. 입력하지 않은 스탯이 있으면 –로 나와요.`}
+    >
 
-      <div className="mt-3 flex gap-1.5">
+      <div className="flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
           {["", ...statKeys, "핵심"].map((label, i) => (
             <span key={i} className={`${ROW_HEIGHT} flex items-center ${label === "핵심" ? "font-medium text-foreground" : ""}`}>
@@ -56,10 +58,6 @@ export default function ResultTable({ role, rows, cond }: Props) {
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs text-zinc-500">
-        핵심: {role === "batter" ? "파워+정확+선구" : "변화+구위"} · 입력하지 않은 스탯이 있으면 –
-      </p>
-
       {/* 게임 화면 수치와 대조할 때 어느 요소에서 차이가 나는지 찾는 용도 */}
       <details className="mt-3">
         <summary className="cursor-pointer text-sm font-medium">카드별 내역</summary>
@@ -103,6 +101,6 @@ export default function ResultTable({ role, rows, cond }: Props) {
           ))}
         </div>
       </details>
-    </section>
+    </Panel>
   );
 }

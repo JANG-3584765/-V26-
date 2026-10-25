@@ -1,4 +1,5 @@
 import { ROW_HEIGHT } from "./CardForm";
+import Panel from "./Panel";
 import { BONUS_TABLE, canAwaken, maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
 
@@ -24,11 +25,9 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
     onCardsChange(cards.map((c, j) => (j === i ? { ...c, ...next } : c)));
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-      <h2 className="font-medium">강화·각성</h2>
-      <p className="mt-1 text-xs text-zinc-500">기본값은 최대 단계입니다. 각성은 10강 이후, 각성이 있는 카드만 가능합니다.</p>
+    <Panel title="강화·각성" info="기본은 최대 단계(10강·9각). 각성은 10강 이후, 임팩·시그·골글·국대만 가능해요. 스탯 줄은 강화+각성 합(괄호 안은 각각)이에요.">
 
-      <div className="mt-3 flex gap-1.5">
+      <div className="flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
           {["", "강화", "각성", ...CORE_STAT_KEYS[role]].map((label, i) => (
             <span key={i} className={`${ROW_HEIGHT} flex items-center`}>
@@ -83,6 +82,6 @@ export default function EnhancePanel({ role, cards, onCardsChange }: Props) {
           );
         })}
       </div>
-    </section>
+    </Panel>
   );
 }
