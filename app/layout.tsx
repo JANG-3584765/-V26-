@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { GA_ID } from "@/lib/analytics";
 import "./globals.css";
 
 const DESCRIPTION = "컴투스프로야구 V26 선수 카드를 같은 육성 조건에 놓고 최종 능력치를 1:1로 비교하는 비공식 팬 도구";
@@ -34,6 +36,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">{children}</body>
+      {/* 측정 ID가 있을 때만 GA를 켠다. 페이지가 뜬 뒤에 스크립트를 받아 첫 화면을 늦추지 않는다.
+          https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics */}
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }

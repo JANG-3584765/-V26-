@@ -1,4 +1,5 @@
 import ComparatorClient from "@/components/ComparatorClient";
+import { GA_ID } from "@/lib/analytics";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       </div>
       <footer className="mt-10 space-y-1 text-center text-xs text-zinc-600 dark:text-zinc-400">
         <p>비공식 팬 사이트입니다. 게임사와 관련이 없습니다.</p>
+        {GA_ID && <p>방문 통계를 위해 Google Analytics를 사용합니다.</p>}
         <p>
           <a href="https://github.com/JANG-3584765/-V26-" className="underline underline-offset-2">
             GitHub

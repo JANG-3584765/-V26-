@@ -2,7 +2,7 @@
 
 // 입력값(useState)이 바뀔 때마다 다시 그려야 하므로 클라이언트 컴포넌트로 만든다.
 // https://nextjs.org/docs/app/building-your-application/rendering/client-components
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CardForm, { ROW_HEIGHT } from "./CardForm";
 import Segmented from "./Segmented";
 import EnhancePanel from "./EnhancePanel";
@@ -13,6 +13,7 @@ import SetDeckPanel from "./SetDeckPanel";
 import ShareButton from "./ShareButton";
 import SpecialPanel from "./SpecialPanel";
 import TrainingPanel from "./TrainingPanel";
+import { track } from "@/lib/analytics";
 import { DEFAULT_CONDITION, maxAwaken, maxEnhance } from "@/lib/bonusTable";
 import { compareCards } from "@/lib/compare";
 import { decodeShare, encodeShare } from "@/lib/share";
@@ -56,6 +57,15 @@ export default function Comparator() {
 
   // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
   const rows = compareCards(role, cards, cond);
+
+  // 두 장 이상이 핵심 스탯을 모두 채우면 "비교 완료"로 보고 방문당 한 번 기록한다 (들어온 사람 중 실제로 비교까지 한 비율)
+  const filled = rows.filter((r) => r.core !== null).length;
+  const reported = useRef(false);
+  useEffect(() => {
+    if (filled < MIN_CARDS || reported.current) return;
+    reported.current = true;
+    track("compare_ready", { role, cards: cards.length });
+  }, [filled, role, cards.length]);
 
   // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 스탯으로 입력한 값(능력치·훈련·특훈·포특 보너스)을 비운다
   const changeRole = (next: Role) => {
@@ -102,7 +112,10 @@ export default function Comparator() {
           {cards.length < MAX_CARDS && (
             <button
               type="button"
-              onClick={() => setCards([...cards, newCard(cards.length + 1)])}
+              onClick={() => {
+                setCards([...cards, newCard(cards.length + 1)]);
+                track("card_add", { cards: cards.length + 1 });
+              }}
               className="mt-3 w-full rounded-xl border border-dashed border-zinc-300 py-2.5 text-sm text-zinc-500 dark:border-zinc-700"
             >
               + 카드 추가
