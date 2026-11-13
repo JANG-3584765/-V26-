@@ -4,7 +4,7 @@ import { decodeShare, encodeShare, type ShareState } from "./share";
 
 const state: ShareState = {
   role: "batter",
-  cond: { ...DEFAULT_CONDITION, redistTargetPct: 30, setDeckScore: 150, yearMatchAll: false, setDeckPicks: DEFAULT_CONDITION.setDeckPicks.map((p, i) => (i === 1 ? 1 : p)) },
+  cond: { ...DEFAULT_CONDITION, redistTargetPct: 30, setDeckScore: 150, yearDeck: { batter: 2025, pitcher: "none" }, tierYears: { 55: 2021, 190: 2019 }, setDeckPicks: DEFAULT_CONDITION.setDeckPicks.map((p, i) => (i === 1 ? 1 : p)) },
   cards: [
     { name: "김도영 시그", type: "시그니처", base: { 파워: 80, 정확: 75, 선구: 70 }, enhanceLevel: 10, awakenLevel: 9 },
     {
@@ -16,7 +16,7 @@ const state: ShareState = {
       customTraining: { 파워: 20, 정확: 10, 선구: 4 },
       special: { 파워: 3, 정확: 2, 선구: 1 },
       potm: true,
-      yearMatch: true,
+      year: 2025,
       lineup: "top",
       position: "SS",
       positionLevel: 15,
@@ -34,7 +34,7 @@ describe("encodeShare / decodeShare", () => {
           customTraining: undefined,
           special: undefined,
           potm: undefined,
-          yearMatch: undefined,
+          year: undefined,
           lineup: undefined,
           position: undefined,
           pitcherSlot: undefined,
@@ -55,7 +55,7 @@ describe("encodeShare / decodeShare", () => {
   });
 
   // 링크는 누구나 고칠 수 있으므로 범위를 벗어난 값은 받지 않는다
-  type Raw = { c: { pk: string; ds: number }; k: { t: number; b: number[]; e: number; a: number; po?: number; pl?: number; sl?: number[] }[] };
+  type Raw = { c: { pk: string; ds: number; yd: unknown[]; ty?: unknown }; k: { t: number; b: number[]; e: number; a: number; po?: number; pl?: number; sl?: number[]; yr?: number }[] };
   const tamper = (fn: (p: Raw) => void) => {
     const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(encodeShare(state).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0))));
     fn(json);
@@ -73,6 +73,11 @@ describe("encodeShare / decodeShare", () => {
     expect(tamper((p) => (p.c.ds = 999))).toBeNull(); // 세트덱 스코어 범위 밖
     expect(tamper((p) => (p.k[1].po = 20))).toBeNull(); // 없는 포지션
     expect(tamper((p) => (p.k[1].pl = 21))).toBeNull(); // 포지션 특훈 21단계
+    expect(tamper((p) => (p.k[1].yr = 1981))).toBeNull(); // 범위 밖 연도
+    expect(tamper((p) => (p.c.yd = ["a"]))).toBeNull(); // 연도 덱이 역할 2개가 아님
+    expect(tamper((p) => (p.c.ty = [[60, 2021]]))).toBeNull(); // 연도 효과가 없는 단계
+    expect(tamper((p) => (p.c.ty = [[55, 2027]]))).toBeNull(); // 범위 밖 단계별 연도
+    expect(tamper((p) => (p.c.ty = "55"))).toBeNull(); // 배열이 아님
     expect(tamper((p) => (p.k[1].sl = [1, 2]))).toBeNull(); // 특훈 값 개수가 핵심 스탯 수와 다름
   });
 });

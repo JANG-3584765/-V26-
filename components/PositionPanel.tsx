@@ -1,7 +1,7 @@
 import { ROW_HEIGHT } from "./CardForm";
 import Panel from "./Panel";
 import { MAX_POSITION_LEVEL, maxPositionBonus, positionTrainingBonus } from "@/lib/positionTraining";
-import { CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
+import { CARD_DEFAULTS, CORE_STAT_KEYS, type CardInput, type Role, type StatKey } from "@/lib/types";
 
 interface Props {
   role: Role;
@@ -38,7 +38,7 @@ export default function PositionPanel({ role, cards, onCardsChange }: Props) {
           ))}
         </div>
         {cards.map((card, i) => {
-          const level = card.positionLevel ?? MAX_POSITION_LEVEL;
+          const level = card.positionLevel ?? CARD_DEFAULTS.positionLevel;
           const max = maxPositionBonus(level);
           const table = positionTrainingBonus(role, card);
           const used = keys.reduce((s, k) => s + (card.positionBonus?.[k] ?? 0), 0);

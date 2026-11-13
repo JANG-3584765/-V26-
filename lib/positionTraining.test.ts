@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CONDITION } from "./bonusTable";
-import { maxPositionBonus, positionBonus, positionRows, positionTrainingBonus } from "./positionTraining";
-import { setDeckBonus, type PitcherSlot, type Position } from "./setDeck";
-import type { CardInput, Role } from "./types";
+import { MAX_POSITION_LEVEL, maxPositionBonus, positionBonus, positionRows, positionTrainingBonus } from "./positionTraining";
+import { setDeckBonus } from "./setDeck";
+import { CARD_DEFAULTS, type CardInput, type PitcherSlot, type Position, type Role } from "./types";
 
 const card = (over: Partial<CardInput> = {}): CardInput => ({
   name: "테스트",
@@ -96,5 +96,11 @@ describe("5·15단 보너스 (직접 입력)", () => {
 
   it("5단 미만이면 입력값이 있어도 무시한다", () => {
     expect(positionBonus(card({ positionLevel: 4, positionBonus: { 파워: 3 } }))).toEqual({});
+  });
+});
+
+describe("기본값", () => {
+  it("카드 기본 포지션 특훈 단계 = 최대 단계", () => {
+    expect(CARD_DEFAULTS.positionLevel).toBe(MAX_POSITION_LEVEL);
   });
 });

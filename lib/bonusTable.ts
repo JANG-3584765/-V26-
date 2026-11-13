@@ -1,5 +1,5 @@
 import { awakenLevels, enhanceLevels } from "./enhance";
-import { DEFAULT_PICKS, MAX_SET_DECK_SCORE } from "./setDeck";
+import { DEFAULT_PICKS, MAX_SET_DECK_SCORE, YEAR_DECK_DEFAULT } from "./setDeck";
 import { CARD_TYPES, type CardType, type CommonCondition, type Role, type Stats } from "./types";
 
 // 레벨별 표는 "그 레벨까지의 누적 보너스"를 담는다. 인덱스 = 레벨, [0]은 보너스 없음.
@@ -31,7 +31,8 @@ export const BONUS_TABLE: BonusTable = {
 export const DEFAULT_CONDITION: CommonCondition = {
   setDeckScore: MAX_SET_DECK_SCORE,
   setDeckPicks: DEFAULT_PICKS,
-  yearMatchAll: true,
+  yearDeck: YEAR_DECK_DEFAULT,
+  tierYears: {},
   lockerLevel: BONUS_TABLE.locker.batter.length - 1,
   applyTraining: true,
   redistTargetPct: 10,

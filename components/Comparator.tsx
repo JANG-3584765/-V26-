@@ -57,10 +57,10 @@ export default function Comparator() {
   // 계산은 입력값에서 바로 구한다. 결과를 따로 state로 두면 입력과 어긋날 수 있다.
   const rows = compareCards(role, cards, cond);
 
-  // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 능력치만 비운다
+  // 투수·타자는 스탯 항목이 달라 입력값을 이어 쓸 수 없으므로 스탯으로 입력한 값(능력치·훈련·특훈·포특 보너스)을 비운다
   const changeRole = (next: Role) => {
     setRole(next);
-    setCards(cards.map((c) => ({ ...c, base: {}, customTraining: undefined, special: undefined })));
+    setCards(cards.map((c) => ({ ...c, base: {}, customTraining: undefined, special: undefined, positionBonus: undefined })));
   };
 
   return (
@@ -79,7 +79,7 @@ export default function Comparator() {
       </div>
 
       {tab === "card" && (
-        <Panel title="카드" info="훈련·강화·각성 전 기본 능력치를 넣어요. 타순·포지션(투수는 보직)은 세트덱·포지션 특훈 계산에, 연도·이달은 세트덱·이달의 선수 계산에 쓰여요.">
+        <Panel title="카드" info="훈련·강화·각성 전 기본 능력치를 넣어요. 타순·포지션(투수는 보직)은 세트덱·포지션 특훈 계산에, 이달은 이달의 선수 계산에 쓰여요. 연도 효과는 세트덱 탭에서 고른 연도와 카드 연도가 같을 때 적용돼요.">
           <div className="flex gap-1.5">
             {/* 항목 이름은 한 번만 두고, 카드는 오른쪽에 열로 나란히 놓는다 */}
             <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
@@ -94,7 +94,6 @@ export default function Comparator() {
                 key={i}
                 role={role}
                 card={card}
-                yearMatchAll={cond.yearMatchAll}
                 onChange={(next) => setCards(cards.map((c, j) => (j === i ? next : c)))}
                 onRemove={cards.length > MIN_CARDS ? () => setCards(cards.filter((_, j) => j !== i)) : undefined}
               />
@@ -119,7 +118,7 @@ export default function Comparator() {
       {tab === "special" && <SpecialPanel role={role} cards={cards} onCardsChange={setCards} />}
       {tab === "position" && <PositionPanel role={role} cards={cards} onCardsChange={setCards} />}
       {tab === "setdeck" && (
-        <SetDeckPanel role={role} cards={cards} onCardsChange={setCards} cond={cond} onCondChange={setCond} />
+        <SetDeckPanel role={role} cards={cards} cond={cond} onCondChange={setCond} />
       )}
 
       <ResultTable role={role} rows={rows} cond={cond} />

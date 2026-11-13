@@ -1,8 +1,8 @@
 import { canAwaken, DEFAULT_CONDITION, maxAwaken, maxEnhance } from "./bonusTable";
 import { MAX_POSITION_LEVEL } from "./positionTraining";
-import { LINEUPS, MAX_SET_DECK_SCORE, PITCHER_SLOTS, POSITIONS, SET_DECK_TIERS } from "./setDeck";
+import { LINEUPS, MAX_SET_DECK_SCORE, MAX_YEAR, MIN_YEAR, PITCHER_SLOTS, POSITIONS, SET_DECK_TIERS, YEAR_TIER_SCORES } from "./setDeck";
 import { canPotm } from "./potm";
-import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role, type Stats } from "./types";
+import { CARD_TYPES, CORE_STAT_KEYS, type CardInput, type CommonCondition, type Role, type Stats, type YearDeck } from "./types";
 
 // 입력 상태를 URL 한 줄(?s=...)로 주고받는다. 서버 없이 링크만으로 공유하려는 용도.
 // JSON → UTF-8 → base64url. 한글 이름은 퍼센트 인코딩(%EC%B9%B4...)보다 base64가 훨씬 짧다.
@@ -23,7 +23,7 @@ interface PackedCard {
   tr?: number[]; // 직접 입력한 훈련값 (핵심 스탯 순서)
   sl?: number[]; // 스탯별 특훈 값 (핵심 스탯 순서)
   pm?: 1; // 이달의 선수
-  y?: 0 | 1; // 연도 (카드별로 따로 정했을 때만)
+  yr?: number; // 카드 연도
   lu?: number; // 타순 (LINEUPS 순번)
   po?: number; // 포지션 (POSITIONS 순번)
   pr?: number; // 투수 배치 칸 (PITCHER_SLOTS 순번)
@@ -33,7 +33,7 @@ interface PackedCard {
 interface Packed {
   v: 1;
   r: "b" | "p";
-  c: { at: boolean; tp: number; ds: number; pk: string; ya: boolean };
+  c: { at: boolean; tp: number; ds: number; pk: string; yd: [PackedYearDeck, PackedYearDeck]; ty?: [number, number][] };
   k: PackedCard[];
 }
 
@@ -62,7 +62,8 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       tp: cond.redistTargetPct,
       ds: cond.setDeckScore,
       pk: cond.setDeckPicks.join(""), // 단계별 선택을 "0110…" 한 줄로
-      ya: cond.yearMatchAll,
+      yd: [packYearDeck(cond.yearDeck.batter), packYearDeck(cond.yearDeck.pitcher)], // [타자, 투수]
+      ...(Object.keys(cond.tierYears).length > 0 && { ty: Object.entries(cond.tierYears).map(([s, y]) => [Number(s), y!]) }), // [[단계 점수, 연도], …]
     },
     k: cards.map((card) => ({
       n: card.name,
@@ -73,7 +74,7 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
       ...(card.customTraining && { tr: keys.map((k) => card.customTraining![k] ?? 0) }),
       ...(card.special && { sl: keys.map((k) => card.special![k] ?? 0) }),
       ...(card.potm && { pm: 1 as const }),
-      ...(card.yearMatch !== undefined && { y: card.yearMatch ? (1 as const) : (0 as const) }),
+      ...(card.year !== undefined && { yr: card.year }),
       ...(card.lineup && { lu: LINEUPS.findIndex((l) => l.value === card.lineup) }),
       ...(card.position && { po: POSITIONS.findIndex((p) => p.value === card.position) }),
       ...(card.pitcherSlot && { pr: PITCHER_SLOTS.findIndex((s) => s.value === card.pitcherSlot) }),
@@ -88,6 +89,15 @@ export function encodeShare({ role, cards, cond }: ShareState): string {
 
 const isInt = (v: unknown, min: number, max: number): v is number =>
   Number.isInteger(v) && (v as number) >= min && (v as number) <= max;
+
+// 연도 덱: "all" → "a", "none" → "n", 연도는 숫자 그대로
+type PackedYearDeck = "a" | "n" | number;
+const packYearDeck = (d: YearDeck): PackedYearDeck => (d === "all" ? "a" : d === "none" ? "n" : d);
+function unpackYearDeck(p: unknown): YearDeck | null {
+  if (p === "a") return "all";
+  if (p === "n") return "none";
+  return isInt(p, MIN_YEAR, MAX_YEAR) ? p : null;
+}
 
 function unpackCard(p: PackedCard, role: Role): CardInput | null {
   const keys = CORE_STAT_KEYS[role];
@@ -115,7 +125,7 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     if (!Array.isArray(p.sl) || p.sl.length !== keys.length || !p.sl.every((v) => isInt(v, 0, MAX_STAT))) return null;
     special = Object.fromEntries(keys.map((k, i) => [k, p.sl![i]]));
   }
-  if (p.y !== undefined && p.y !== 0 && p.y !== 1) return null;
+  if (p.yr !== undefined && !isInt(p.yr, MIN_YEAR, MAX_YEAR)) return null;
   if (p.lu !== undefined && !isInt(p.lu, 0, LINEUPS.length - 1)) return null;
   if (p.po !== undefined && !isInt(p.po, 0, POSITIONS.length - 1)) return null;
   if (p.pr !== undefined && !isInt(p.pr, 0, PITCHER_SLOTS.length - 1)) return null;
@@ -135,7 +145,7 @@ function unpackCard(p: PackedCard, role: Role): CardInput | null {
     customTraining,
     special,
     potm: p.pm === 1 && canPotm(type) ? true : undefined,
-    yearMatch: p.y === undefined ? undefined : p.y === 1,
+    year: p.yr,
     lineup: p.lu === undefined ? undefined : LINEUPS[p.lu].value,
     position: p.po === undefined ? undefined : POSITIONS[p.po].value,
     pitcherSlot: p.pr === undefined ? undefined : PITCHER_SLOTS[p.pr].value,
@@ -151,9 +161,19 @@ export function decodeShare(s: string): ShareState | null {
     if (p.k.length < 1 || p.k.length > MAX_CARDS) return null;
     const role: Role = p.r === "b" ? "batter" : "pitcher";
 
-    const { at, tp, ds, pk, ya } = p.c ?? {};
+    const { at, tp, ds, pk, yd, ty } = p.c ?? {};
     if (typeof at !== "boolean" || !isInt(tp, 1, 100)) return null;
-    if (!isInt(ds, 0, MAX_SET_DECK_SCORE) || typeof ya !== "boolean") return null;
+    if (!isInt(ds, 0, MAX_SET_DECK_SCORE) || !Array.isArray(yd) || yd.length !== 2) return null;
+    const [batterYear, pitcherYear] = yd.map(unpackYearDeck);
+    if (batterYear === null || pitcherYear === null) return null;
+    const tierYears: Partial<Record<number, number>> = {};
+    if (ty !== undefined) {
+      if (!Array.isArray(ty)) return null;
+      for (const pair of ty) {
+        if (!Array.isArray(pair) || !YEAR_TIER_SCORES.includes(pair[0]) || !isInt(pair[1], MIN_YEAR, MAX_YEAR)) return null;
+        tierYears[pair[0]] = pair[1];
+      }
+    }
     if (typeof pk !== "string" || !new RegExp(`^[01]{${SET_DECK_TIERS.length}}$`).test(pk)) return null;
     const cond: CommonCondition = {
       ...DEFAULT_CONDITION,
@@ -161,7 +181,8 @@ export function decodeShare(s: string): ShareState | null {
       redistTargetPct: tp,
       setDeckScore: ds,
       setDeckPicks: [...pk].map((ch) => (ch === "1" ? 1 : 0)),
-      yearMatchAll: ya,
+      yearDeck: { batter: batterYear, pitcher: pitcherYear },
+      tierYears,
     };
 
     const cards = p.k.map((c) => unpackCard(c, role));

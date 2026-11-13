@@ -1,5 +1,4 @@
-import type { PitcherSlot, Position } from "./setDeck";
-import type { CardInput, Role, Stats } from "./types";
+import { CARD_DEFAULTS, type CardInput, type PitcherSlot, type Position, type Role, type Stats } from "./types";
 
 // 게임 내 "포지션별 능력치표"(단계별 능력치 상승분)를 옮긴 값. 카드 종류와 상관없이 배치한 포지션에 따라 정해진다.
 // 후보타자는 실사용하지 않는 세트덱 채우기용이라 포지션 특훈을 거의 하지 않아 다루지 않는다.
@@ -296,8 +295,8 @@ export function positionRows(role: Role, slot: Position | PitcherSlot): Row[] {
 
 // 해당 단계까지 오른 능력치 합
 export function positionTrainingBonus(role: Role, card: CardInput): Stats {
-  const slot = role === "batter" ? (card.position ?? "DH") : (card.pitcherSlot ?? "SP1");
-  const level = card.positionLevel ?? MAX_POSITION_LEVEL;
+  const slot = role === "batter" ? (card.position ?? CARD_DEFAULTS.position) : (card.pitcherSlot ?? CARD_DEFAULTS.pitcherSlot);
+  const level = card.positionLevel ?? CARD_DEFAULTS.positionLevel;
   const total: Stats = {};
   for (const row of positionRows(role, slot).slice(0, level)) {
     row.forEach((v, i) => {
@@ -318,6 +317,6 @@ export const maxPositionBonus = (level: number) => BONUS_LEVELS.filter((l) => le
 
 // 입력한 보너스 (5단 미만이면 보너스가 없으므로 무시)
 export function positionBonus(card: CardInput): Stats {
-  const level = card.positionLevel ?? MAX_POSITION_LEVEL;
+  const level = card.positionLevel ?? CARD_DEFAULTS.positionLevel;
   return maxPositionBonus(level) > 0 ? (card.positionBonus ?? {}) : {};
 }
