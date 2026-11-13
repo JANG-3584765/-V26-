@@ -1,24 +1,43 @@
 @import "tailwindcss";
 
+/* 색은 여기 변수로만 정하고, Tailwind 클래스(bg-page, bg-accent 등)는 이 변수를 가리키게 한다.
+   다크 모드는 변수 값만 바꾸면 모든 화면에 같이 적용된다. https://tailwindcss.com/docs/theme */
 :root {
-  --background: #ffffff;
+  --page: #f4f5f7; /* 화면 바탕 */
+  --background: #ffffff; /* 패널·입력 칸 바탕 */
   --foreground: #171717;
+  --accent: #2563eb; /* 강조 (최고값, 공유 버튼) */
+  --accent-foreground: #ffffff;
 }
 
 @theme inline {
+  --color-page: var(--page);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --page: #0a0a0a;
+    --background: #161618;
     --foreground: #ededed;
+    --accent: #3b82f6;
+    --accent-foreground: #ffffff;
   }
 }
 
 body {
-  background: var(--background);
+  background: var(--page);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* 웹 폰트를 받지 않고 기기에 있는 한글 폰트를 쓴다 (로딩 지연 없음) */
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+}
+
+/* 키보드로 이동할 때만 포커스 테두리를 보여준다 (마우스·터치로 누를 때는 숨김)
+   https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

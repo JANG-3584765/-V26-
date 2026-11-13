@@ -22,7 +22,7 @@ export default function ShareButton() {
       <button
         type="button"
         onClick={copy}
-        className="w-full rounded-xl bg-foreground py-3 font-medium text-background"
+        className="w-full rounded-xl bg-accent py-3 font-medium text-accent-foreground shadow-sm transition-opacity active:opacity-80"
       >
         {status === "copied" ? "복사됐어요" : "비교 링크 복사"}
       </button>
@@ -35,7 +35,7 @@ export default function ShareButton() {
           aria-label="공유 링크"
         />
       )}
-      <p className="mt-2 text-center text-xs text-zinc-500">링크를 열면 지금 입력한 카드와 조건이 그대로 보입니다</p>
+      <p className="mt-2 text-center text-xs text-zinc-600 dark:text-zinc-400">링크를 열면 지금 입력한 카드와 조건이 그대로 보입니다</p>
     </div>
   );
 }

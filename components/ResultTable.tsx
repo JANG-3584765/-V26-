@@ -14,7 +14,7 @@ const cell = `${ROW_HEIGHT} flex flex-col items-center justify-center rounded-md
 // 한 줄(스탯 하나)의 값들 중 최댓값 — 그 줄에서 가장 높은 카드를 강조하고, 나머지는 차이를 보여준다
 function Value({ value, best }: { value: number | null | undefined; best: number }) {
   if (value == null) return <span className={`${cell} text-zinc-400`}>–</span>;
-  if (value === best) return <span className={`${cell} bg-foreground font-semibold text-background`}>{value}</span>;
+  if (value === best) return <span className={`${cell} bg-accent font-semibold text-accent-foreground`}>{value}</span>;
   return (
     <span className={cell}>
       <span className="leading-4">{value}</span>

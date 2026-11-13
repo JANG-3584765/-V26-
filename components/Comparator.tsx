@@ -66,7 +66,7 @@ export default function Comparator() {
   return (
     <div className="space-y-4">
       {/* 스크롤해도 위에 붙어 있는 조작 줄: 타자/투수, 탭 */}
-      <div className="sticky top-0 z-10 -mx-4 space-y-2 border-b border-zinc-200 bg-background px-4 py-2 dark:border-zinc-800">
+      <div className="sticky top-0 z-10 -mx-4 space-y-2 border-b border-zinc-200 bg-page/90 px-4 py-2 backdrop-blur dark:border-zinc-800">
         <Segmented
           options={[
             { value: "batter", label: "타자" },

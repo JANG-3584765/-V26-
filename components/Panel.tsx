@@ -14,7 +14,7 @@ export default function Panel({ title, info, actions, children }: Props) {
   const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <section className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+    <section className="rounded-xl border border-zinc-200 bg-background p-4 shadow-sm dark:border-zinc-800 dark:shadow-none">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <h2 className="font-medium">{title}</h2>
