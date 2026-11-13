@@ -36,7 +36,12 @@ export default function ResultTable({ role, rows, cond }: Props) {
       title="비교 결과"
       info={`모든 요소를 반영한 최종 능력치예요. 줄마다 가장 높은 값을 강조하고, 나머지는 차이를 보여줘요. 핵심: ${role === "batter" ? "파워+정확+선구" : "변화+구위"}. 입력하지 않은 스탯이 있으면 –로 나와요.`}
     >
-
+      {/* 빈 상태: 아직 아무 카드도 핵심 스탯을 다 채우지 않았을 때 무엇을 해야 하는지 알려준다 */}
+      {rows.every((r) => r.core === null) && (
+        <p className="mb-3 rounded-md bg-zinc-100 px-2.5 py-2 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+          카드 탭에서 {statKeys.join("·")}을 입력하면 결과가 나와요
+        </p>
+      )}
       <div className="flex gap-1.5">
         <div className="flex w-10 shrink-0 flex-col gap-1.5 text-xs text-zinc-500">
           {["", ...statKeys, "핵심"].map((label, i) => (
@@ -48,7 +53,8 @@ export default function ResultTable({ role, rows, cond }: Props) {
         {columns.map((r) => (
           <div key={r.index} className="flex min-w-0 flex-1 flex-col gap-1.5">
             <span className={`${ROW_HEIGHT} truncate text-center text-sm leading-9`}>
-              <span className="font-semibold">{rankOf.get(r.index)}위</span> {r.card.name}
+              {r.core !== null && <span className="font-semibold">{rankOf.get(r.index)}위 </span>}
+              {r.card.name}
               <span className="text-xs text-zinc-500"> {SHORT_NAME[r.card.type]}</span>
             </span>
             {statKeys.map((key) => (

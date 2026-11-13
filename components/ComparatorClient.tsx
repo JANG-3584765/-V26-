@@ -5,6 +5,10 @@
 // https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
 import dynamic from "next/dynamic";
 
-const ComparatorClient = dynamic(() => import("./Comparator"), { ssr: false });
+// 스크립트를 받는 동안 보여줄 자리 표시 (빈 화면 대신)
+const ComparatorClient = dynamic(() => import("./Comparator"), {
+  ssr: false,
+  loading: () => <p className="py-10 text-center text-sm text-zinc-600 dark:text-zinc-400">불러오는 중…</p>,
+});
 
 export default ComparatorClient;
