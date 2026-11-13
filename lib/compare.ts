@@ -23,7 +23,6 @@ export function cardTraining(role: Role, card: CardInput, cond: CommonCondition)
 }
 
 // 카드에 적용할 스탯별 특훈값: 사용자가 입력한 값 그대로 (입력하지 않으면 0).
-// 특훈 확률 모델(special.ts)은 참고용으로 남겨 두고 비교에는 쓰지 않는다.
 export const cardSpecial = (card: CardInput): Stats => card.special ?? {};
 
 export interface BreakdownRow {

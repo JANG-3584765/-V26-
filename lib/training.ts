@@ -16,13 +16,13 @@ export const POINTS_PER_LEVEL = 3;
 
 // 훈련 재분배 1회에서 핵심 스탯(타자 파워·정확·선구, 투수 변화·구위)으로 간 훈련 포인트 합이
 // from + i 이상 나올 확률(%) = probs[i].
-// 커뮤니티에 공유된 확률표를 옮겼고, 표가 없던 카드는 같은 규칙의 확률 모델(redistModel.ts)로 계산해 채웠다.
+// 커뮤니티에 공유된 확률표를 옮겼고, 표가 없던 카드는 같은 규칙의 확률 모델로 계산해 채웠다.
 export interface RedistTable {
   from: number;
   probs: number[];
 }
 
-// [모델] 표시가 붙은 표는 redistModel.ts로 계산한 값 (redistModel.test.ts에서 모델과 일치하는지 검사)
+// [모델] 표시가 붙은 표는 확률 모델로 계산한 값 (모델은 커뮤니티 표 9개를 그대로 재현하는 것을 확인했다)
 // 국가대표는 업데이트로 최대 22레벨이 되어, 20레벨 기준이던 커뮤니티 표 대신 모델 값을 쓴다.
 export const REDIST_TABLE: Record<Role, Record<CardType, RedistTable>> = {
   batter: {

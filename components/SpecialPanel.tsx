@@ -11,7 +11,6 @@ interface Props {
 const field = `${ROW_HEIGHT} w-full min-w-0 rounded-md border border-zinc-300 bg-background px-1 text-center text-sm dark:border-zinc-700`;
 
 // 특훈: 게임에서 본 스탯별 특훈 값을 그대로 입력한다 (입력하지 않으면 0).
-// 공식 확률로 계산하는 재훈련 확률 모델은 lib/special.ts에 참고용으로 남겨 두었다.
 export default function SpecialPanel({ role, cards, onCardsChange }: Props) {
   const keys = CORE_STAT_KEYS[role];
 
